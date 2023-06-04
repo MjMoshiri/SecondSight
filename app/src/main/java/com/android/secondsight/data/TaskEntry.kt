@@ -7,11 +7,11 @@ import kotlin.time.TimeSource
 data class TaskEntry(
     val id: String,
     val taskId: String,
-    val start: TimeSource?,
-    val end: TimeSource?,
-    val curStart: TimeSource?,
+    val start: TimeSource.Monotonic.ValueTimeMark?,
+    val end: TimeSource.Monotonic.ValueTimeMark?,
+    val curStart: TimeSource.Monotonic.ValueTimeMark?,
     val intervals: List<Interval>?,
-    val duration: Duration,
+    val duration: Duration?,
     val isRunning: Boolean?,
     val isComplete: Boolean
 )
