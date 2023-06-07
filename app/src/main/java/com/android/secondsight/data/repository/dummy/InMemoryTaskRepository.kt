@@ -2,8 +2,9 @@ package com.android.secondsight.data.repository.dummy
 
 import com.android.secondsight.data.Task
 import com.android.secondsight.data.repository.TaskRepository
+import javax.inject.Inject
 
-class InMemoryTaskRepository : TaskRepository {
+class InMemoryTaskRepository @Inject constructor() : TaskRepository {
     private val tasks = mutableListOf<Task>()
     private var currentId = 0
     override fun getTasks(): List<Task> {
@@ -11,8 +12,7 @@ class InMemoryTaskRepository : TaskRepository {
     }
 
     override fun getTask(id: String): Task {
-        return tasks.find { it.id == id }
-            ?: throw NoSuchElementException("Can't find the Task")
+        return tasks.find { it.id == id } ?: throw NoSuchElementException("Can't find the Task")
     }
 
     override fun addTask(name: String, description: String?): Task {
