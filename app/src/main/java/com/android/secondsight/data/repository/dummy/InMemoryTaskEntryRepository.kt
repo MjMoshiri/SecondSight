@@ -14,71 +14,63 @@ class InMemoryTaskEntryRepository : TaskEntryRepository {
     private var currentIntervalId = 0
 
     override fun getTaskEntry(id: String): TaskEntry {
-        return taskEntries[id]
-            ?: throw NoSuchElementException("Can't find the TaskEntry")
+        return taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
     }
 
+    override fun getTaskEntries(taskId: String): List<TaskEntry> {
+        return taskEntries.values.filter { it.taskId == taskId }
+    }
 
     override fun addTaskEntry(taskId: String): TaskEntry {
         val curTime = TimeSource.Monotonic.markNow()
         val taskEntry = TaskEntry(
-            taskId, currentId++.toString(), start = curTime,
-            end = null, curStart = curTime, intervals = emptyList<Interval>(),
-            duration = Duration.ZERO, isRunning = true, isComplete = false
+            taskId,
+            currentId++.toString(),
+            start = curTime,
+            end = null,
+            curStart = curTime,
+            intervals = emptyList<Interval>(),
+            duration = Duration.ZERO,
+            isRunning = true,
+            isComplete = false
         )
         taskEntries[taskEntry.id] = taskEntry
         return taskEntry
     }
 
     override fun pauseTaskEntry(id: String): TaskEntry {
-        val taskEntry = taskEntries[id]
-            ?: throw NoSuchElementException("Can't find the TaskEntry")
+        val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
         val curTime = TimeSource.Monotonic.markNow()
         val start = taskEntry.curStart!!
         val duration = taskEntry.duration!!.plus(curTime - start)
         taskEntries[id] = taskEntry.copy(
-            curStart = null,
-            intervals = taskEntry.intervals!!.plus(
+            curStart = null, intervals = taskEntry.intervals!!.plus(
                 Interval(
-                    start,
-                    curTime,
-                    curTime - start,
-                    currentIntervalId++.toString()
+                    start, curTime, curTime - start, currentIntervalId++.toString()
                 )
-            ),
-            duration = duration,
-            isRunning = false
+            ), duration = duration, isRunning = false
         )
         return taskEntries[id]!!
     }
 
     override fun resumeTaskEntry(id: String): TaskEntry {
-        val taskEntry = taskEntries[id]
-            ?: throw NoSuchElementException("Can't find the TaskEntry")
+        val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
         val curTime = TimeSource.Monotonic.markNow()
         taskEntries[id] = taskEntry.copy(curStart = curTime, isRunning = true)
         return taskEntries[id]!!
     }
 
     override fun endTaskEntry(id: String): TaskEntry {
-        val taskEntry = taskEntries[id]
-            ?: throw NoSuchElementException("Can't find the TaskEntry")
+        val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
         val curTime = TimeSource.Monotonic.markNow()
         val start = taskEntry.curStart!!
         val duration = taskEntry.duration!!.plus(curTime - start)
         taskEntries[id] = taskEntry.copy(
-            curStart = null,
-            intervals = taskEntry.intervals!!.plus(
+            curStart = null, intervals = taskEntry.intervals!!.plus(
                 Interval(
-                    start,
-                    curTime,
-                    curTime - start,
-                    currentIntervalId++.toString()
+                    start, curTime, curTime - start, currentIntervalId++.toString()
                 )
-            ),
-            duration = duration,
-            isRunning = false,
-            isComplete = true
+            ), duration = duration, isRunning = false, isComplete = true
         )
         return taskEntries[id]!!
     }

@@ -1,6 +1,8 @@
 package com.android.secondsight.di
 
+import com.android.secondsight.data.repository.TaskEntryRepository
 import com.android.secondsight.data.repository.TaskRepository
+import com.android.secondsight.data.repository.dummy.InMemoryTaskEntryRepository
 import com.android.secondsight.data.repository.dummy.InMemoryTaskRepository
 import dagger.Module
 import dagger.Provides
@@ -15,5 +17,11 @@ object DataSource {
     @Singleton
     fun provideTaskRepository(): TaskRepository {
         return InMemoryTaskRepository()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTaskEntryRepository(): TaskEntryRepository {
+        return InMemoryTaskEntryRepository()
     }
 }
