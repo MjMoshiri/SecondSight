@@ -3,9 +3,9 @@ package com.android.secondsight.data.repository.dummy
 import com.android.secondsight.data.Interval
 import com.android.secondsight.data.TaskEntry
 import com.android.secondsight.data.repository.TaskEntryRepository
-import kotlin.time.Duration
+import java.time.Duration
+import java.time.LocalDateTime
 import kotlin.time.ExperimentalTime
-import kotlin.time.TimeSource
 
 @OptIn(ExperimentalTime::class)
 class InMemoryTaskEntryRepository : TaskEntryRepository {
@@ -22,10 +22,10 @@ class InMemoryTaskEntryRepository : TaskEntryRepository {
     }
 
     override fun addTaskEntry(taskId: String): TaskEntry {
-        val curTime = TimeSource.Monotonic.markNow()
+        val curTime = LocalDateTime.now()
         val taskEntry = TaskEntry(
-            taskId,
-            currentId++.toString(),
+            taskId=taskId,
+            id = currentId++.toString(),
             start = curTime,
             end = null,
             curStart = curTime,
@@ -40,13 +40,16 @@ class InMemoryTaskEntryRepository : TaskEntryRepository {
 
     override fun pauseTaskEntry(id: String): TaskEntry {
         val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
-        val curTime = TimeSource.Monotonic.markNow()
+        val curTime = LocalDateTime.now()
         val start = taskEntry.curStart!!
-        val duration = taskEntry.duration!!.plus(curTime - start)
+        val duration = taskEntry.duration + Duration.between(start, curTime)
         taskEntries[id] = taskEntry.copy(
             curStart = null, intervals = taskEntry.intervals!!.plus(
                 Interval(
-                    start, curTime, curTime - start, currentIntervalId++.toString()
+                    start,
+                    end = curTime,
+                    duration = Duration.between(start, curTime),
+                    id = currentIntervalId++.toString()
                 )
             ), duration = duration, isRunning = false
         )
@@ -55,20 +58,20 @@ class InMemoryTaskEntryRepository : TaskEntryRepository {
 
     override fun resumeTaskEntry(id: String): TaskEntry {
         val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
-        val curTime = TimeSource.Monotonic.markNow()
+        val curTime = LocalDateTime.now()
         taskEntries[id] = taskEntry.copy(curStart = curTime, isRunning = true)
         return taskEntries[id]!!
     }
 
     override fun endTaskEntry(id: String): TaskEntry {
         val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
-        val curTime = TimeSource.Monotonic.markNow()
+        val end = LocalDateTime.now()
         val start = taskEntry.curStart!!
-        val duration = taskEntry.duration!!.plus(curTime - start)
+        val duration = taskEntry.duration + Duration.between(start, end)
         taskEntries[id] = taskEntry.copy(
             curStart = null, intervals = taskEntry.intervals!!.plus(
                 Interval(
-                    start, curTime, curTime - start, currentIntervalId++.toString()
+                    start, end, Duration.between(start, end), currentIntervalId++.toString()
                 )
             ), duration = duration, isRunning = false, isComplete = true
         )

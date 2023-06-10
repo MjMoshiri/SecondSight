@@ -2,6 +2,7 @@
 
 package com.android.secondsight.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +32,11 @@ import com.android.secondsight.viewmodel.TaskListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskListScreen(viewModel: TaskListViewModel, pd: PaddingValues) {
+fun TaskListScreen(
+    viewModel: TaskListViewModel,
+    pd: PaddingValues,
+    onTaskClick: (String) -> Unit,
+) {
     val tasks by viewModel.tasks.observeAsState(listOf())
     val newTaskDialogShown = remember { mutableStateOf(false) }
 
@@ -40,8 +45,13 @@ fun TaskListScreen(viewModel: TaskListViewModel, pd: PaddingValues) {
             .fillMaxSize()
             .padding(pd)
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            TaskList(tasks = tasks)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            TaskList(tasks = tasks, onTaskClick = onTaskClick)
         }
         FloatingActionButton(
             onClick = { newTaskDialogShown.value = true },
@@ -63,13 +73,17 @@ fun TaskListScreen(viewModel: TaskListViewModel, pd: PaddingValues) {
 }
 
 @Composable
-fun TaskList(tasks: List<Task>) {
+fun TaskList(tasks: List<Task>, onTaskClick: (String) -> Unit) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth()
     ) {
         items(tasks) { task ->
             Row(
-                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        onTaskClick(task.id)
+                    }, horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
                     Text(text = task.name)
