@@ -1,7 +1,6 @@
-@file:OptIn(ExperimentalTime::class)
-
 package com.android.secondsight.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,10 +25,14 @@ import com.android.secondsight.data.TaskEntry
 import com.android.secondsight.util.ui.getDurationString
 import com.android.secondsight.viewmodel.TaskViewModel
 import java.time.format.DateTimeFormatter
-import kotlin.time.ExperimentalTime
 
 @Composable
-fun EntryListScreen(viewModel: TaskViewModel, pd: PaddingValues, createEntry: (String) -> Unit) {
+fun EntryListScreen(
+    viewModel: TaskViewModel,
+    pd: PaddingValues,
+    createEntry: (String) -> Unit,
+    selectEntry: (String) -> Unit
+) {
     val entries = MutableLiveData<List<TaskEntry>>().apply {
         value = viewModel.taskEntries
     }
@@ -39,7 +42,7 @@ fun EntryListScreen(viewModel: TaskViewModel, pd: PaddingValues, createEntry: (S
             .padding(pd)
     ) {
         Column {
-            EntryList(entries = entries.value ?: emptyList())
+            EntryList(entries = entries.value ?: emptyList(), selectEntry = selectEntry)
         }
         FloatingActionButton(
             onClick = {
@@ -57,25 +60,27 @@ fun EntryListScreen(viewModel: TaskViewModel, pd: PaddingValues, createEntry: (S
 }
 
 @Composable
-fun EntryList(entries: List<TaskEntry>) {
+fun EntryList(entries: List<TaskEntry>, selectEntry: (String) -> Unit) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
     ) {
         items(entries) { entry ->
-            EntryItem(entry = entry)
+            EntryItem(entry = entry, selectEntry)
         }
     }
 }
 
 @Composable
-fun EntryItem(entry: TaskEntry) {
+fun EntryItem(entry: TaskEntry, selectEntry: (String) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .padding(8.dp)
+            .clickable {
+                selectEntry(entry.id)
+            }, horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(text = entry.start.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
         Text(text = getDurationString(entry.duration))

@@ -53,6 +53,9 @@ fun SecondSight(
                     pd = innerPadding,
                     createEntry = { entryId ->
                         navController.navigate("task_detail/$taskId/entry_detail/$entryId")
+                    },
+                    selectEntry = { entryId ->
+                        navController.navigate("task_detail/$taskId/entry_detail/$entryId")
                     })
             }
             composable("task_detail/{taskId}/entry_detail/{entryId}") {

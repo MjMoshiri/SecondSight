@@ -16,15 +16,20 @@ import java.time.Duration
 
 
 class EntryViewModel @AssistedInject constructor(
-    private val taskEntryRepository: TaskEntryRepository,
-    @Assisted private val entryId: String
+    private val taskEntryRepository: TaskEntryRepository, @Assisted private val entryId: String
 ) : ViewModel() {
     private val _taskEntry: MutableLiveData<TaskEntry> = MutableLiveData<TaskEntry>().apply {
         value = taskEntryRepository.getTaskEntry(entryId)
     }
     val taskEntry: LiveData<TaskEntry> get() = _taskEntry
-    private val _time = MutableLiveData<Duration>()
+    private val _time = MutableLiveData<Duration>().apply {
+        value = taskEntryRepository.getTaskEntry(entryId).duration
+    }
     val time: LiveData<Duration> get() = _time
+    private val _isCompleted = MutableLiveData<Boolean>().apply {
+        value = taskEntryRepository.getTaskEntry(entryId).isComplete
+    }
+    val isCompleted: LiveData<Boolean> get() = _isCompleted
 
     init {
         updateTime()
@@ -33,7 +38,7 @@ class EntryViewModel @AssistedInject constructor(
     private fun updateTime() {
         viewModelScope.launch(Dispatchers.IO) {
             while (_taskEntry.value?.curStart == null) {
-                delay(5)
+                delay(3)
             }
             while (true) {
                 val curStart = _taskEntry.value?.curStart
@@ -62,8 +67,9 @@ class EntryViewModel @AssistedInject constructor(
     }
 
     fun endTaskEntry() {
-        if (_taskEntry.value?.isRunning == true) {
-            _taskEntry.postValue(taskEntryRepository.pauseTaskEntry(entryId))
+        if (_taskEntry.value?.isComplete == false) {
+            _taskEntry.postValue(taskEntryRepository.endTaskEntry(entryId))
+            _isCompleted.postValue(true)
         }
     }
 }

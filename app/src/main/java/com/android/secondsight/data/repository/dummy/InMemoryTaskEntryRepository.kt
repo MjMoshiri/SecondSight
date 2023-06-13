@@ -24,7 +24,7 @@ class InMemoryTaskEntryRepository : TaskEntryRepository {
     override fun addTaskEntry(taskId: String): TaskEntry {
         val curTime = LocalDateTime.now()
         val taskEntry = TaskEntry(
-            taskId=taskId,
+            taskId = taskId,
             id = currentId++.toString(),
             start = curTime,
             end = null,
@@ -66,15 +66,19 @@ class InMemoryTaskEntryRepository : TaskEntryRepository {
     override fun endTaskEntry(id: String): TaskEntry {
         val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
         val end = LocalDateTime.now()
-        val start = taskEntry.curStart!!
-        val duration = taskEntry.duration + Duration.between(start, end)
-        taskEntries[id] = taskEntry.copy(
-            curStart = null, intervals = taskEntry.intervals!!.plus(
-                Interval(
-                    start, end, Duration.between(start, end), currentIntervalId++.toString()
-                )
-            ), duration = duration, isRunning = false, isComplete = true
-        )
+        if (taskEntry.isRunning == true) {
+            val start = taskEntry.curStart!!
+            val duration = taskEntry.duration + Duration.between(start, end)
+            taskEntries[id] = taskEntry.copy(
+                end = end, curStart = null, intervals = taskEntry.intervals!!.plus(
+                    Interval(
+                        start, end, Duration.between(start, end), currentIntervalId++.toString()
+                    )
+                ), duration = duration, isRunning = false, isComplete = true
+            )
+        } else {
+            taskEntries[id] = taskEntry.copy(isComplete = true, end = end)
+        }
         return taskEntries[id]!!
     }
 

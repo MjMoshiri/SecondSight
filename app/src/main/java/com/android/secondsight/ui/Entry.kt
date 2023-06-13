@@ -26,6 +26,7 @@ fun EntryScreen(
 ) {
     val taskEntry = viewModel.taskEntry.observeAsState()
     val duration by viewModel.time.observeAsState()
+    val isComplete by viewModel.isCompleted.observeAsState()
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -37,37 +38,37 @@ fun EntryScreen(
             modifier = Modifier.align(Alignment.Center)
         )
     }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row {
-            Button(modifier = Modifier
-                .weight(1f)
-                .padding(end = 8.dp), onClick = {
-                if (taskEntry.value?.isRunning == true) {
-                    viewModel.pauseTaskEntry()
-                } else {
-                    viewModel.resumeTaskEntry()
+    if (isComplete == false) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Bottom,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row {
+                Button(modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp), onClick = {
+                    if (taskEntry.value?.isRunning == true) {
+                        viewModel.pauseTaskEntry()
+                    } else {
+                        viewModel.resumeTaskEntry()
+                    }
+                }) {
+                    Text(
+                        text = if (taskEntry.value?.isRunning == true) "Pause" else "Resume"
+                    )
                 }
-            }) {
-                Text(
-                    text = if (taskEntry.value?.isRunning == true) "Pause" else "Resume"
-                )
-            }
-            Button(modifier = Modifier
-                .weight(1f)
-                .padding(start = 8.dp), onClick = {
-                viewModel.endTaskEntry()
-                stopEntry(taskEntry.value?.id!!)
-            }) {
-                Text(text = "Stop")
+                Button(modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp), onClick = {
+                    viewModel.endTaskEntry()
+                    stopEntry(taskEntry.value?.id!!)
+                }) {
+                    Text(text = "Stop")
+                }
             }
         }
     }
 }
-
