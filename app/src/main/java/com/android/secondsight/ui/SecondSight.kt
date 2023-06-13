@@ -12,17 +12,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.android.secondsight.Screen
-import com.android.secondsight.viewmodel.EntryViewModelFactory
 import com.android.secondsight.viewmodel.TaskListViewModel
-import com.android.secondsight.viewmodel.TaskViewModelFactory
+import com.android.secondsight.viewmodel.provider.vmProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SecondSight(
     viewModel: TaskListViewModel,
-    taskViewModelFactory: TaskViewModelFactory,
-    navController: NavHostController = rememberNavController(),
-    entryViewModelFactory: EntryViewModelFactory
+    vmProvider: vmProvider,
+    navController: NavHostController = rememberNavController()
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -49,7 +47,7 @@ fun SecondSight(
             }
             composable("task_detail/{taskId}") {
                 val taskId = it.arguments?.getString("taskId")!!
-                EntryListScreen(viewModel = taskViewModelFactory.create(taskId),
+                EntryListScreen(viewModel = vmProvider.getTaskViewModel(taskId),
                     pd = innerPadding,
                     createEntry = { entryId ->
                         navController.navigate("task_detail/$taskId/entry_detail/$entryId")
@@ -60,7 +58,7 @@ fun SecondSight(
             }
             composable("task_detail/{taskId}/entry_detail/{entryId}") {
                 val entryId = it.arguments?.getString("entryId")!!
-                EntryScreen(viewModel = entryViewModelFactory.create(entryId),
+                EntryScreen(viewModel = vmProvider.getEntryViewModel(entryId),
                     pd = innerPadding,
                     stopEntry = { navController.popBackStack() })
             }

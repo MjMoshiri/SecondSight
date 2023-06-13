@@ -78,3 +78,4 @@ class EntryViewModel @AssistedInject constructor(
 interface EntryViewModelFactory {
     fun create(entryId: String): EntryViewModel
 }
+

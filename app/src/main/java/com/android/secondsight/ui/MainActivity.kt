@@ -7,9 +7,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.material3.ExperimentalMaterial3Api
-import com.android.secondsight.viewmodel.EntryViewModelFactory
 import com.android.secondsight.viewmodel.TaskListViewModel
-import com.android.secondsight.viewmodel.TaskViewModelFactory
+import com.android.secondsight.viewmodel.provider.vmProvider
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -18,18 +17,15 @@ class MainActivity : ComponentActivity() {
     private val viewModel: TaskListViewModel by viewModels()
 
     @Inject
-    lateinit var taskViewModelFactory: TaskViewModelFactory
+    lateinit var vmProvider: vmProvider
 
-    @Inject
-    lateinit var entryViewModelFactory: EntryViewModelFactory
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             SecondSight(
                 viewModel,
-                taskViewModelFactory = taskViewModelFactory,
-                entryViewModelFactory = entryViewModelFactory
+                vmProvider
             )
         }
     }
