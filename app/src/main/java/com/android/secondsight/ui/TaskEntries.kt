@@ -17,10 +17,11 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.MutableLiveData
 import com.android.secondsight.data.TaskEntry
 import com.android.secondsight.util.ui.getDurationString
 import com.android.secondsight.viewmodel.TaskViewModel
@@ -33,8 +34,9 @@ fun EntryListScreen(
     createEntry: (String) -> Unit,
     selectEntry: (String) -> Unit
 ) {
-    val entries = MutableLiveData<List<TaskEntry>>().apply {
-        value = viewModel.taskEntries
+    val entries = viewModel.taskEntries.observeAsState()
+    LaunchedEffect(key1 = viewModel.taskEntries) {
+        viewModel.updateTaskEntry()
     }
     Box(
         modifier = Modifier
@@ -42,7 +44,9 @@ fun EntryListScreen(
             .padding(pd)
     ) {
         Column {
-            EntryList(entries = entries.value ?: emptyList(), selectEntry = selectEntry)
+            EntryList(
+                entries = entries.value!!, selectEntry = selectEntry
+            )
         }
         FloatingActionButton(
             onClick = {
@@ -60,7 +64,9 @@ fun EntryListScreen(
 }
 
 @Composable
-fun EntryList(entries: List<TaskEntry>, selectEntry: (String) -> Unit) {
+fun EntryList(
+    entries: List<TaskEntry>, selectEntry: (String) -> Unit
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()

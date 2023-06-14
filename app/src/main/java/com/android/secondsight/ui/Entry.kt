@@ -33,13 +33,17 @@ fun EntryScreen(
     val isComplete by viewModel.isCompleted.observeAsState()
     val isRunning by viewModel.isRunning.observeAsState()
     val context = LocalContext.current
-    LaunchedEffect(isRunning) {
+    LaunchedEffect(isRunning, isComplete) {
         while (taskEntry.value == null) {
             delay(5)
         }
-        EntryNotificationService(
-            context, taskEntry.value?.id!!, isRunning
-        ).show()
+        if (isComplete == true) {
+            EntryNotificationService(context, taskEntry.value?.id!!, isRunning).stop()
+        } else {
+            EntryNotificationService(
+                context, taskEntry.value?.id!!, isRunning
+            ).show()
+        }
     }
     Box(
         modifier = Modifier
@@ -77,6 +81,7 @@ fun EntryScreen(
                 Button(modifier = Modifier
                     .weight(1f)
                     .padding(start = 8.dp), onClick = {
+                    EntryNotificationService(context, taskEntry.value?.id!!, isRunning).stop()
                     viewModel.endTaskEntry()
                     stopEntry(taskEntry.value?.id!!)
                 }) {

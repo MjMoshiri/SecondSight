@@ -60,7 +60,9 @@ fun SecondSight(
                 val entryId = it.arguments?.getString("entryId")!!
                 EntryScreen(viewModel = vmProvider.getEntryViewModel(entryId),
                     pd = innerPadding,
-                    stopEntry = { navController.popBackStack() })
+                    stopEntry = { taskId ->
+                        navController.popBackStack("task_detail/$taskId", false)
+                    })
             }
         }
     }
