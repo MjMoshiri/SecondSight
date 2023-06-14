@@ -30,6 +30,10 @@ class EntryViewModel @AssistedInject constructor(
         value = taskEntryRepository.getTaskEntry(entryId).isComplete
     }
     val isCompleted: LiveData<Boolean> get() = _isCompleted
+    val _isRunning = MutableLiveData<Boolean>().apply {
+        value = taskEntryRepository.getTaskEntry(entryId).isRunning
+    }
+    val isRunning: LiveData<Boolean> get() = _isRunning
 
     init {
         updateTime()
@@ -56,12 +60,14 @@ class EntryViewModel @AssistedInject constructor(
     fun pauseTaskEntry() {
         if (_taskEntry.value?.isRunning == true) {
             _taskEntry.postValue(taskEntryRepository.pauseTaskEntry(entryId))
+            _isRunning.postValue(false)
         }
     }
 
     fun resumeTaskEntry() {
         if (_taskEntry.value?.isRunning == false) {
             _taskEntry.postValue(taskEntryRepository.resumeTaskEntry(entryId))
+            _isRunning.postValue(true)
             updateTime()
         }
     }
@@ -70,6 +76,7 @@ class EntryViewModel @AssistedInject constructor(
         if (_taskEntry.value?.isComplete == false) {
             _taskEntry.postValue(taskEntryRepository.endTaskEntry(entryId))
             _isCompleted.postValue(true)
+            _isRunning.postValue(false)
         }
     }
 }

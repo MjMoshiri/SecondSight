@@ -31,12 +31,15 @@ fun EntryScreen(
     val taskEntry = viewModel.taskEntry.observeAsState()
     val duration by viewModel.time.observeAsState()
     val isComplete by viewModel.isCompleted.observeAsState()
+    val isRunning by viewModel.isRunning.observeAsState()
     val context = LocalContext.current
-    LaunchedEffect(true) {
+    LaunchedEffect(isRunning) {
         while (taskEntry.value == null) {
             delay(5)
         }
-        EntryNotificationService(context, taskEntry.value?.id!!).show()
+        EntryNotificationService(
+            context, taskEntry.value?.id!!, isRunning
+        ).show()
     }
     Box(
         modifier = Modifier

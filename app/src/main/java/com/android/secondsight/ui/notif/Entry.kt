@@ -12,7 +12,7 @@ import com.android.secondsight.util.Receiver
 
 
 class EntryNotificationService(
-    private val context: Context, private val id: String,
+    private val context: Context, private val id: String, private val isRunning: Boolean?,
 ) {
 
     companion object {
@@ -33,11 +33,13 @@ class EntryNotificationService(
             NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(R.drawable.timer)
                 .setContentTitle("Task Entry Notification").setContentText("Manage your task entry")
                 .setPriority(NotificationCompat.PRIORITY_HIGH).setOngoing(true)
-                .addAction(createPauseAction()).addAction(createResumeAction())
-                .addAction(createStopAction()).build()
+                .addAction(createStopAction())
+                .addAction(if (isRunning == false) createResumeAction() else createPauseAction())
+                .build()
 
         notificationManager.notify(NOTIF_ID, notification)
     }
+    
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -51,7 +53,6 @@ class EntryNotificationService(
     }
 
     private fun createPauseAction(): NotificationCompat.Action {
-        println("pause action")
         val intent = Intent(context, Receiver::class.java).apply {
             action = "action.pause"
             putExtra("entryId", id)
@@ -59,12 +60,11 @@ class EntryNotificationService(
         val pendingIntent =
             PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         return NotificationCompat.Action(
-            androidx.core.R.drawable.ic_call_answer_video, "Pause", pendingIntent
+            R.drawable.ic_pause, "Pause", pendingIntent
         )
     }
 
     private fun createResumeAction(): NotificationCompat.Action {
-        println("resume action")
         val intent = Intent(context, Receiver::class.java).apply {
             action = "action.resume"
             putExtra("entryId", id)
@@ -72,12 +72,11 @@ class EntryNotificationService(
         val pendingIntent =
             PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         return NotificationCompat.Action(
-            androidx.core.R.drawable.ic_call_answer, "Resume", pendingIntent
+            R.drawable.ic_play, "Resume", pendingIntent
         )
     }
 
     private fun createStopAction(): NotificationCompat.Action {
-        println("stop action")
         val intent = Intent(context, Receiver::class.java).apply {
             action = "action.stop"
             putExtra("entryId", id)
@@ -85,7 +84,7 @@ class EntryNotificationService(
         val pendingIntent =
             PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
         return NotificationCompat.Action(
-            androidx.core.R.drawable.ic_call_decline, "Stop", pendingIntent
+            R.drawable.ic_stop, "Stop", pendingIntent
         )
     }
 }
