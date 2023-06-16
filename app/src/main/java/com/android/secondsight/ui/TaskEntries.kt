@@ -31,8 +31,8 @@ import java.time.format.DateTimeFormatter
 fun EntryListScreen(
     viewModel: TaskViewModel,
     pd: PaddingValues,
-    createEntry: (String) -> Unit,
-    selectEntry: (String) -> Unit
+    createEntry: (Long) -> Unit,
+    selectEntry: (Long) -> Unit
 ) {
     val entries = viewModel.taskEntries.observeAsState()
     LaunchedEffect(key1 = viewModel.taskEntries) {
@@ -45,13 +45,12 @@ fun EntryListScreen(
     ) {
         Column {
             EntryList(
-                entries = entries.value!!, selectEntry = selectEntry
+                entries = entries.value?.entries ?: emptyList(), selectEntry = selectEntry
             )
         }
         FloatingActionButton(
             onClick = {
-                val id = viewModel.addTaskEntry()
-                createEntry(id)
+               viewModel.addTaskEntry(createEntry)
             }, modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
@@ -65,7 +64,7 @@ fun EntryListScreen(
 
 @Composable
 fun EntryList(
-    entries: List<TaskEntry>, selectEntry: (String) -> Unit
+    entries: List<TaskEntry>, selectEntry: (Long) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -79,7 +78,7 @@ fun EntryList(
 }
 
 @Composable
-fun EntryItem(entry: TaskEntry, selectEntry: (String) -> Unit) {
+fun EntryItem(entry: TaskEntry, selectEntry: (Long) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

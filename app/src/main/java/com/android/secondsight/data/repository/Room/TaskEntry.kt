@@ -1,30 +1,31 @@
-package com.android.secondsight.data.repository.dummy
+package com.android.secondsight.data.repository.Room
 
 import com.android.secondsight.data.Interval
 import com.android.secondsight.data.TaskEntry
 import com.android.secondsight.data.TaskWithEntries
+import com.android.secondsight.data.doa.TaskEntryDao
 import com.android.secondsight.data.repository.TaskEntryRepository
 import java.time.Duration
 import java.time.LocalDateTime
+import javax.inject.Inject
 
-class InMemoryTaskEntryRepository : TaskEntryRepository {
-    private val taskEntries = mutableMapOf<Long, TaskEntry>()
-    private var currentId: Long = 0
-
-    override fun getTaskEntry(id: Long): TaskEntry {
-        return taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
-    }
+class RoomTaskEntryRepository @Inject constructor(
+    private val taskEntryDao: TaskEntryDao
+) : TaskEntryRepository {
 
     override fun getTaskEntries(taskId: Long): TaskWithEntries {
-        return TaskWithEntries(task = InMemoryTaskRepository().getTask(taskId),
-            entries = taskEntries.values.filter { it.taskId == taskId })
+        return taskEntryDao.getTaskEntries(taskId)
+    }
+
+    override fun getTaskEntry(id: Long): TaskEntry {
+        return taskEntryDao.getTaskEntry(id)
     }
 
     override fun addTaskEntry(taskId: Long): TaskEntry {
         val curTime = LocalDateTime.now()
         val taskEntry = TaskEntry(
             taskId = taskId,
-            id = currentId++,
+            id = 0,
             start = curTime,
             end = null,
             curStart = curTime,
@@ -33,54 +34,58 @@ class InMemoryTaskEntryRepository : TaskEntryRepository {
             isRunning = true,
             isComplete = false
         )
-        taskEntries[taskEntry.id] = taskEntry
-        return taskEntry
+        val id = taskEntryDao.addTaskEntry(taskEntry)
+        return taskEntry.copy(id = id)
     }
 
     override fun pauseTaskEntry(id: Long): TaskEntry {
-        val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
+        val taskEntry = taskEntryDao.getTaskEntry(id)
         val curTime = LocalDateTime.now()
         val start = taskEntry.curStart!!
         val duration = taskEntry.duration + Duration.between(start, curTime)
-        taskEntries[id] = taskEntry.copy(
+        val pausedTask = taskEntry.copy(
             curStart = null, intervals = taskEntry.intervals!!.plus(
                 Interval(
-                    start,
-                    end = curTime,
-                    duration = Duration.between(start, curTime),
+                    start, end = curTime, duration = Duration.between(start, curTime)
                 )
             ), duration = duration, isRunning = false
         )
-        return taskEntries[id]!!
+        taskEntryDao.updateTaskEntry(pausedTask)
+        return pausedTask
     }
 
     override fun resumeTaskEntry(id: Long): TaskEntry {
-        val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
+        val taskEntry = taskEntryDao.getTaskEntry(id)
         val curTime = LocalDateTime.now()
-        taskEntries[id] = taskEntry.copy(curStart = curTime, isRunning = true)
-        return taskEntries[id]!!
+        val resumedTask = taskEntry.copy(curStart = curTime, isRunning = true)
+        taskEntryDao.updateTaskEntry(resumedTask)
+        return resumedTask
     }
 
     override fun endTaskEntry(id: Long): TaskEntry {
-        val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
+        val taskEntry = taskEntryDao.getTaskEntry(id)
         val end = LocalDateTime.now()
+        lateinit var endedTask: TaskEntry
         if (taskEntry.isRunning == true) {
             val start = taskEntry.curStart!!
             val duration = taskEntry.duration + Duration.between(start, end)
-            taskEntries[id] = taskEntry.copy(
+            endedTask = taskEntry.copy(
                 end = end, curStart = null, intervals = taskEntry.intervals!!.plus(
                     Interval(
                         start, end, Duration.between(start, end)
                     )
                 ), duration = duration, isRunning = false, isComplete = true
             )
+            taskEntryDao.updateTaskEntry(endedTask)
         } else {
-            taskEntries[id] = taskEntry.copy(isComplete = true, end = end)
+            endedTask = taskEntry.copy(isComplete = true, end = end)
+            taskEntryDao.updateTaskEntry(endedTask)
+
         }
-        return taskEntries[id]!!
+        return endedTask
     }
 
     override fun deleteTaskEntry(id: Long) {
-        taskEntries.remove(id)
+        taskEntryDao.deleteTaskEntry(id)
     }
 }

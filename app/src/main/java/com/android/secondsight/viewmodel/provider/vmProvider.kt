@@ -13,25 +13,25 @@ class vmProvider @Inject constructor(
     private val entryFactory: EntryViewModelFactory,
     private val taskFactory: TaskViewModelFactory,
 ) : ViewModelProvider.Factory {
-    private val entryMap = mutableMapOf<String, EntryViewModel>()
-    private val taskMap = mutableMapOf<String, TaskViewModel>()
-    fun getEntryViewModel(id: String): EntryViewModel {
+    private val entryMap = mutableMapOf<Long, EntryViewModel>()
+    private val taskMap = mutableMapOf<Long, TaskViewModel>()
+    fun getEntryViewModel(id: Long): EntryViewModel {
         return entryMap.getOrPut(id) {
             entryFactory.create(id)
         }
     }
 
-    fun getTaskViewModel(id: String): TaskViewModel {
+    fun getTaskViewModel(id: Long): TaskViewModel {
         return taskMap.getOrPut(id) {
             taskFactory.create(id)
         }
     }
 
-    fun removeTaskViewModel(id: String) {
+    fun removeTaskViewModel(id: Long) {
         taskMap.remove(id)
     }
 
-    fun removeEntryViewModel(id: String) {
+    fun removeEntryViewModel(id: Long) {
         entryMap.remove(id)
     }
 }

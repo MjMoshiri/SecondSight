@@ -46,7 +46,7 @@ fun SecondSight(
                 })
             }
             composable("task_detail/{taskId}") {
-                val taskId = it.arguments?.getString("taskId")!!
+                val taskId = it.arguments?.getString("taskId")!!.toLong()
                 EntryListScreen(viewModel = vmProvider.getTaskViewModel(taskId),
                     pd = innerPadding,
                     createEntry = { entryId ->
@@ -57,7 +57,7 @@ fun SecondSight(
                     })
             }
             composable("task_detail/{taskId}/entry_detail/{entryId}") {
-                val entryId = it.arguments?.getString("entryId")!!
+                val entryId = it.arguments?.getString("entryId")!!.toLong()
                 EntryScreen(viewModel = vmProvider.getEntryViewModel(entryId),
                     pd = innerPadding,
                     stopEntry = { taskId ->

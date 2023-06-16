@@ -6,12 +6,21 @@ import androidx.lifecycle.ViewModel
 import com.android.secondsight.data.Task
 import com.android.secondsight.data.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class TaskListViewModel @Inject constructor(
     private val taskRepository: TaskRepository
 ) : ViewModel() {
+
+    private val viewModelJob = SupervisorJob()
+
+    private val viewModelScope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
     private val _tasks = MutableLiveData<List<Task>>()
     val tasks: LiveData<List<Task>> = _tasks
@@ -21,14 +30,34 @@ class TaskListViewModel @Inject constructor(
     }
 
     private fun loadTasks() {
-        _tasks.value = taskRepository.getTasks()
+        viewModelScope.launch {
+            _tasks.value = withContext(Dispatchers.IO) {
+                taskRepository.getTasks()
+            }
+        }
     }
 
     fun addTask(name: String, description: String) {
-        taskRepository.addTask(name, description)
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                taskRepository.addTask(name, description)
+                _tasks.postValue(taskRepository.getTasks())
+            }
+
+        }
     }
 
     fun deleteTask(task: Task) {
-        taskRepository.deleteTask(task)
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                taskRepository.deleteTask(task)
+            }
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelJob.cancel()
     }
 }
+

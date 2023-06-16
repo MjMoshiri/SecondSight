@@ -12,7 +12,7 @@ import com.android.secondsight.util.Receiver
 
 
 class EntryNotificationService(
-    private val context: Context, private val id: String, private val isRunning: Boolean?,
+    private val context: Context, private val id: Long, private val isRunning: Boolean?,
 ) {
 
     companion object {
@@ -61,7 +61,7 @@ class EntryNotificationService(
             putExtra("entryId", id)
         }
         val pendingIntent =
-            PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Action(
             R.drawable.ic_pause, "Pause", pendingIntent
         )
@@ -73,7 +73,12 @@ class EntryNotificationService(
             putExtra("entryId", id)
         }
         val pendingIntent =
-            PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
         return NotificationCompat.Action(
             R.drawable.ic_play, "Resume", pendingIntent
         )
@@ -85,7 +90,12 @@ class EntryNotificationService(
             putExtra("entryId", id)
         }
         val pendingIntent =
-            PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                context,
+                0,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
         return NotificationCompat.Action(
             R.drawable.ic_stop, "Stop", pendingIntent
         )

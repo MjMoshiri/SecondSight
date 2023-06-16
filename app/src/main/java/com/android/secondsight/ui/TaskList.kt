@@ -35,7 +35,7 @@ import com.android.secondsight.viewmodel.TaskListViewModel
 fun TaskListScreen(
     viewModel: TaskListViewModel,
     pd: PaddingValues,
-    onTaskClick: (String) -> Unit,
+    onTaskClick: (Long) -> Unit,
 ) {
     val tasks by viewModel.tasks.observeAsState(listOf())
     val newTaskDialogShown = remember { mutableStateOf(false) }
@@ -73,7 +73,7 @@ fun TaskListScreen(
 }
 
 @Composable
-fun TaskList(tasks: List<Task>, onTaskClick: (String) -> Unit) {
+fun TaskList(tasks: List<Task>, onTaskClick: (Long) -> Unit) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth()
     ) {

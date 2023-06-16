@@ -26,7 +26,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun EntryScreen(
-    viewModel: EntryViewModel, pd: PaddingValues, stopEntry: (String) -> Unit
+    viewModel: EntryViewModel, pd: PaddingValues, stopEntry: (Long) -> Unit
 ) {
     val taskEntry = viewModel.taskEntry.observeAsState()
     val duration by viewModel.time.observeAsState()

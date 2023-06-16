@@ -14,12 +14,13 @@ class Receiver : HiltBroadcastReceiver() {
     lateinit var vmProvider: vmProvider
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        val entryId = intent.getStringExtra("entryId")!!
+        val entryId = intent.getLongExtra("entryId", -1)
         when (intent.action) {
             "action.pause" -> {
                 val entryViewModel = vmProvider.getEntryViewModel(entryId)
                 entryViewModel.pauseTaskEntry()
             }
+
             "action.resume" -> {
                 val entryViewModel = vmProvider.getEntryViewModel(entryId)
                 entryViewModel.resumeTaskEntry()

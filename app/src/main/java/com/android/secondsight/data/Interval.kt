@@ -10,5 +10,4 @@ data class Interval(
     val start: LocalDateTime,
     val end: LocalDateTime,
     val duration: Duration,
-    val id: String,
 )
