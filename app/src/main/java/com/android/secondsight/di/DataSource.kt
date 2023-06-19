@@ -52,4 +52,10 @@ object DataSource {
     ): TaskRepository {
         return RoomTaskRepository(taskDao)
     }
+
+    @Provides
+    @Singleton
+    fun provideContext(@ApplicationContext appContext: Context): Context {
+        return appContext
+    }
 }

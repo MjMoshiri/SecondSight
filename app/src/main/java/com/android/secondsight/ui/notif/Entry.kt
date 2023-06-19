@@ -17,7 +17,6 @@ class EntryNotificationService(
 
     companion object {
         const val CHANNEL_ID = "entry_notif_channel"
-        const val NOTIF_ID = 1
     }
 
     private val notificationManager: NotificationManager by lazy {
@@ -32,16 +31,15 @@ class EntryNotificationService(
         val notification =
             NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(R.drawable.timer)
                 .setContentTitle("Task Entry Notification").setContentText("Manage your task entry")
-                .setPriority(NotificationCompat.PRIORITY_HIGH).setOngoing(true)
-                .addAction(createStopAction())
+                .setPriority(NotificationCompat.PRIORITY_HIGH).addAction(createStopAction())
                 .addAction(if (isRunning == false) createResumeAction() else createPauseAction())
                 .build()
 
-        notificationManager.notify(NOTIF_ID, notification)
+        notificationManager.notify(id.toInt(), notification)
     }
 
     fun stop() {
-        notificationManager.cancel(NOTIF_ID)
+        notificationManager.cancel(id.toInt())
     }
 
     private fun createNotificationChannel() {
@@ -57,11 +55,10 @@ class EntryNotificationService(
 
     private fun createPauseAction(): NotificationCompat.Action {
         val intent = Intent(context, Receiver::class.java).apply {
-            action = "action.pause"
-            putExtra("entryId", id)
+            action = "action.pause!$id"
         }
         val pendingIntent =
-            PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+            PendingIntent.getBroadcast(context, 1, intent, PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Action(
             R.drawable.ic_pause, "Pause", pendingIntent
         )
@@ -69,16 +66,11 @@ class EntryNotificationService(
 
     private fun createResumeAction(): NotificationCompat.Action {
         val intent = Intent(context, Receiver::class.java).apply {
-            action = "action.resume"
-            putExtra("entryId", id)
+            action = "action.resume!$id"
         }
-        val pendingIntent =
-            PendingIntent.getBroadcast(
-                context,
-                0,
-                intent,
-                PendingIntent.FLAG_IMMUTABLE
-            )
+        val pendingIntent = PendingIntent.getBroadcast(
+            context, 2, intent, PendingIntent.FLAG_IMMUTABLE
+        )
         return NotificationCompat.Action(
             R.drawable.ic_play, "Resume", pendingIntent
         )
@@ -86,16 +78,11 @@ class EntryNotificationService(
 
     private fun createStopAction(): NotificationCompat.Action {
         val intent = Intent(context, Receiver::class.java).apply {
-            action = "action.stop"
-            putExtra("entryId", id)
+            action = "action.stop!$id"
         }
-        val pendingIntent =
-            PendingIntent.getBroadcast(
-                context,
-                0,
-                intent,
-                PendingIntent.FLAG_IMMUTABLE
-            )
+        val pendingIntent = PendingIntent.getBroadcast(
+            context, 3, intent, PendingIntent.FLAG_IMMUTABLE
+        )
         return NotificationCompat.Action(
             R.drawable.ic_stop, "Stop", pendingIntent
         )

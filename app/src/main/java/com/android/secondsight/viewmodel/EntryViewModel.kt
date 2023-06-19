@@ -1,11 +1,13 @@
 package com.android.secondsight.viewmodel
 
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.android.secondsight.data.TaskEntry
 import com.android.secondsight.data.repository.TaskEntryRepository
+import com.android.secondsight.ui.notif.EntryNotificationService
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -18,7 +20,9 @@ import kotlinx.coroutines.withContext
 import java.time.Duration
 
 class EntryViewModel @AssistedInject constructor(
-    private val taskEntryRepository: TaskEntryRepository, @Assisted private val entryId: Long
+    private val taskEntryRepository: TaskEntryRepository,
+    private val context: Context,
+    @Assisted private val entryId: Long,
 ) : ViewModel() {
 
     private val viewModelJob = SupervisorJob()
@@ -50,6 +54,15 @@ class EntryViewModel @AssistedInject constructor(
         updateTime()
     }
 
+
+    private fun runNotificationService(isRunning: Boolean, isCompleted: Boolean) {
+        if (isCompleted) {
+            EntryNotificationService(context, entryId, false).stop()
+        } else {
+            EntryNotificationService(context, entryId, isRunning).show()
+        }
+    }
+
     private fun loadTaskEntry() {
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
@@ -58,6 +71,7 @@ class EntryViewModel @AssistedInject constructor(
                 _time.postValue(taskEntry.duration)
                 _isCompleted.postValue(taskEntry.isComplete)
                 _isRunning.postValue(taskEntry.isRunning)
+                runNotificationService(taskEntry.isRunning!!, taskEntry.isComplete)
             }
         }
     }
@@ -87,6 +101,7 @@ class EntryViewModel @AssistedInject constructor(
                 }
                 _taskEntry.postValue(pausedEntry)
                 _isRunning.postValue(false)
+                runNotificationService(isRunning = false, isCompleted = false)
             }
         }
     }
@@ -100,6 +115,7 @@ class EntryViewModel @AssistedInject constructor(
                 _taskEntry.postValue(resumedEntry)
                 _isRunning.postValue(true)
                 updateTime()
+                runNotificationService(isRunning = true, isCompleted = false)
             }
         }
     }
@@ -113,6 +129,7 @@ class EntryViewModel @AssistedInject constructor(
                 _taskEntry.postValue(endedEntry)
                 _isCompleted.postValue(true)
                 _isRunning.postValue(false)
+                runNotificationService(isRunning = false, isCompleted = true)
             }
         }
     }

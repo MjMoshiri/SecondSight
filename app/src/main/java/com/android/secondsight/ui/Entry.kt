@@ -10,18 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.android.secondsight.ui.notif.EntryNotificationService
 import com.android.secondsight.util.ui.getDurationString
 import com.android.secondsight.viewmodel.EntryViewModel
-import kotlinx.coroutines.delay
 
 
 @Composable
@@ -31,20 +27,6 @@ fun EntryScreen(
     val taskEntry = viewModel.taskEntry.observeAsState()
     val duration by viewModel.time.observeAsState()
     val isComplete by viewModel.isCompleted.observeAsState()
-    val isRunning by viewModel.isRunning.observeAsState()
-    val context = LocalContext.current
-    LaunchedEffect(isRunning, isComplete) {
-        while (taskEntry.value == null) {
-            delay(5)
-        }
-        if (isComplete == true) {
-            EntryNotificationService(context, taskEntry.value?.id!!, isRunning).stop()
-        } else {
-            EntryNotificationService(
-                context, taskEntry.value?.id!!, isRunning
-            ).show()
-        }
-    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -81,7 +63,6 @@ fun EntryScreen(
                 Button(modifier = Modifier
                     .weight(1f)
                     .padding(start = 8.dp), onClick = {
-                    EntryNotificationService(context, taskEntry.value?.id!!, isRunning).stop()
                     viewModel.endTaskEntry()
                     stopEntry(taskEntry.value?.id!!)
                 }) {
