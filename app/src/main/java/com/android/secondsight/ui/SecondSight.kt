@@ -2,9 +2,11 @@ package com.android.secondsight.ui
 
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -20,7 +22,8 @@ import com.android.secondsight.viewmodel.provider.vmProvider
 fun SecondSight(
     viewModel: TaskListViewModel,
     vmProvider: vmProvider,
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    darkTheme: MutableState<Boolean>
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -36,6 +39,8 @@ fun SecondSight(
                         else -> "Second Sight"
                     }
                 )
+            }, actions = {
+                Switch(checked = darkTheme.value, onCheckedChange = { darkTheme.value = it })
             })
         },
     ) { innerPadding ->
