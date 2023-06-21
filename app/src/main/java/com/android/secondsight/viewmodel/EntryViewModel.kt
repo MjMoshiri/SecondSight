@@ -134,6 +134,14 @@ class EntryViewModel @AssistedInject constructor(
         }
     }
 
+    fun deleteTaskEntry() {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                taskEntryRepository.deleteTaskEntry(entryId)
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         viewModelJob.cancel()
