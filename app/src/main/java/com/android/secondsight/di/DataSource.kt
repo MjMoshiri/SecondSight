@@ -2,8 +2,8 @@ package com.android.secondsight.di
 
 import android.content.Context
 import androidx.room.Room
-import com.android.secondsight.data.doa.TaskDao
-import com.android.secondsight.data.doa.TaskEntryDao
+import com.android.secondsight.data.dao.TaskDao
+import com.android.secondsight.data.dao.TaskEntryDao
 import com.android.secondsight.data.repository.Room.RoomTaskEntryRepository
 import com.android.secondsight.data.repository.Room.RoomTaskRepository
 import com.android.secondsight.data.repository.TaskEntryRepository

@@ -1,7 +1,7 @@
 package com.android.secondsight.data.repository.Room
 
 import com.android.secondsight.data.Task
-import com.android.secondsight.data.doa.TaskDao
+import com.android.secondsight.data.dao.TaskDao
 import com.android.secondsight.data.repository.TaskRepository
 import javax.inject.Inject
 

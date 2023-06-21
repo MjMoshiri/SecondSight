@@ -3,7 +3,7 @@ package com.android.secondsight.data.repository.Room
 import com.android.secondsight.data.Interval
 import com.android.secondsight.data.TaskEntry
 import com.android.secondsight.data.TaskWithEntries
-import com.android.secondsight.data.doa.TaskEntryDao
+import com.android.secondsight.data.dao.TaskEntryDao
 import com.android.secondsight.data.repository.TaskEntryRepository
 import java.time.Duration
 import java.time.LocalDateTime

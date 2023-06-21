@@ -1,4 +1,4 @@
-package com.android.secondsight.data.doa
+package com.android.secondsight.data.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
