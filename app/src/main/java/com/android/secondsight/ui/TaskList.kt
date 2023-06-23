@@ -15,18 +15,23 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import com.android.secondsight.data.Task
 import com.android.secondsight.viewmodel.TaskListViewModel
 
@@ -51,7 +56,12 @@ fun TaskListScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            TaskList(tasks = tasks, onTaskClick = onTaskClick)
+            TaskList(tasks = tasks,
+                onTaskClick = onTaskClick,
+                deleteTask = { viewModel.deleteTask(it) },
+                updateTask = { name, description, task ->
+                    viewModel.updateTask(name, description, task)
+                })
         }
         FloatingActionButton(
             onClick = { newTaskDialogShown.value = true },
@@ -73,17 +83,63 @@ fun TaskListScreen(
 }
 
 @Composable
-fun TaskList(tasks: List<Task>, onTaskClick: (Long) -> Unit) {
+fun TaskList(
+    tasks: List<Task>,
+    onTaskClick: (Long) -> Unit,
+    deleteTask: (Task) -> Unit,
+    updateTask: (String?, String?, Task) -> Unit
+) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth()
     ) {
         items(tasks) { task ->
+            var isDeleteDialogOpen by remember { mutableStateOf(false) }
+            var isUpdateDialogOpen by remember { mutableStateOf(false) }
+            var newName by remember { mutableStateOf(task.name) }
+            var newDescription by remember { mutableStateOf(task.description ?: "") }
+
+            if (isDeleteDialogOpen) {
+                AlertDialog(onDismissRequest = { isDeleteDialogOpen = false },
+                    title = { Text(text = "Are you sure you want to delete this task?") },
+                    confirmButton = {
+                        Button(onClick = {
+                            deleteTask(task)
+                            isDeleteDialogOpen = false
+                        }) {
+                            Text("Confirm")
+                        }
+                    },
+                    dismissButton = {
+                        Button(onClick = { isDeleteDialogOpen = false }) {
+                            Text("Cancel")
+                        }
+                    })
+            }
+
+            if (isUpdateDialogOpen) {
+                Dialog(onDismissRequest = { isUpdateDialogOpen = false }) {
+                    Column {
+                        OutlinedTextField(value = newName,
+                            onValueChange = { newName = it },
+                            label = { Text("Name") })
+                        OutlinedTextField(value = newDescription,
+                            onValueChange = { newDescription = it },
+                            label = { Text("Description") })
+                        Button(onClick = {
+                            updateTask(newName, newDescription, task)
+                            isUpdateDialogOpen = false
+                        }) {
+                            Text("Update")
+                        }
+                    }
+                }
+            }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
-                        onTaskClick(task.id)
-                    }, horizontalArrangement = Arrangement.SpaceBetween
+                    .clickable { onTaskClick(task.id) },
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
                     Text(text = task.name)
@@ -91,10 +147,19 @@ fun TaskList(tasks: List<Task>, onTaskClick: (Long) -> Unit) {
                         Text(text = description)
                     }
                 }
+                Column {
+                    Button(onClick = { isUpdateDialogOpen = true }) {
+                        Text("Edit")
+                    }
+                    Button(onClick = { isDeleteDialogOpen = true }) {
+                        Text("Delete")
+                    }
+                }
             }
         }
     }
 }
+
 
 
 

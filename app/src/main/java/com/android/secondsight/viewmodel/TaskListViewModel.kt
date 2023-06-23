@@ -51,6 +51,16 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 taskRepository.deleteTask(task)
+                _tasks.postValue(taskRepository.getTasks())
+            }
+        }
+    }
+
+    fun updateTask(name: String? = null, description: String? = null, task: Task) {
+        viewModelScope.launch {
+            withContext(Dispatchers.IO) {
+                taskRepository.updateTask(name, description, task)
+                _tasks.postValue(taskRepository.getTasks())
             }
         }
     }

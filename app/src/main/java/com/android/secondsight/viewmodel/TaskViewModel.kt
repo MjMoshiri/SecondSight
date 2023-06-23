@@ -50,6 +50,7 @@ class TaskViewModel @AssistedInject constructor(
         }
     }
 
+
     override fun onCleared() {
         super.onCleared()
         viewModelJob.cancel()
