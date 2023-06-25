@@ -31,7 +31,15 @@ fun CreateOrUpdateTaskDialog(
     var description by remember { mutableStateOf(initialDescription) }
     var isError by remember { mutableStateOf(false) }
 
-    AlertDialog(onDismissRequest = onCancel, title = { Text(text = "Update Task") }, text = {
+    AlertDialog(onDismissRequest = onCancel, title = {
+        Text(
+            text = if (initialName.isNotBlank()) {
+                "Update Task"
+            } else {
+                "Create Task"
+            }
+        )
+    }, text = {
         Column {
             OutlinedTextField(modifier = Modifier
                 .fillMaxWidth()
