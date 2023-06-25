@@ -1,6 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
-package com.android.secondsight.ui
+package com.android.secondsight.ui.util
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,13 +19,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.unit.dp
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NewTaskDialog(onConfirm: (String, String) -> Unit, onCancel: () -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+fun CreateOrUpdateTaskDialog(
+    onConfirm: (String, String) -> Unit,
+    onCancel: () -> Unit,
+    initialName: String,
+    initialDescription: String
+) {
+    var name by remember { mutableStateOf(initialName) }
+    var description by remember { mutableStateOf(initialDescription) }
     var isError by remember { mutableStateOf(false) }
 
-    AlertDialog(onDismissRequest = onCancel, title = { Text(text = "New Task") }, text = {
+    AlertDialog(onDismissRequest = onCancel, title = { Text(text = "Update Task") }, text = {
         Column {
             OutlinedTextField(modifier = Modifier
                 .fillMaxWidth()
@@ -57,7 +61,13 @@ fun NewTaskDialog(onConfirm: (String, String) -> Unit, onCancel: () -> Unit) {
                 isError = true
             }
         }) {
-            Text(text = "Add")
+            Text(text = let {
+                if (initialName.isNotBlank()) {
+                    "Update"
+                } else {
+                    "Create"
+                }
+            })
         }
     }, dismissButton = {
         Button(onClick = onCancel) {
@@ -65,3 +75,4 @@ fun NewTaskDialog(onConfirm: (String, String) -> Unit, onCancel: () -> Unit) {
         }
     })
 }
+
