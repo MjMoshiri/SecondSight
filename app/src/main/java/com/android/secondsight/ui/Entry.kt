@@ -105,5 +105,4 @@ fun EntryScreen(
             }
         }
     }
-
 }
