@@ -7,12 +7,13 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.android.secondsight.data.TaskEntry
 import com.android.secondsight.data.TaskWithEntries
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TaskEntryDao {
     @Transaction
     @Query("SELECT * FROM Task WHERE id = :taskId")
-    fun getTaskEntries(taskId: Long): TaskWithEntries
+    fun getTaskEntries(taskId: Long): Flow<TaskWithEntries>
 
     @Query("SELECT * FROM TaskEntry WHERE id = :id")
     fun getTaskEntry(id: Long): TaskEntry

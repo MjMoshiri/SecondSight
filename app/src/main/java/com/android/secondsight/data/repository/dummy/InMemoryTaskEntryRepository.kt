@@ -4,6 +4,7 @@ import com.android.secondsight.data.Interval
 import com.android.secondsight.data.TaskEntry
 import com.android.secondsight.data.TaskWithEntries
 import com.android.secondsight.data.repository.TaskEntryRepository
+import kotlinx.coroutines.flow.Flow
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -15,9 +16,8 @@ class InMemoryTaskEntryRepository : TaskEntryRepository {
         return taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
     }
 
-    override fun getTaskEntries(taskId: Long): TaskWithEntries {
-        return TaskWithEntries(task = InMemoryTaskRepository().getTask(taskId),
-            entries = taskEntries.values.filter { it.taskId == taskId })
+    override fun getTaskEntries(taskId: Long): Flow<TaskWithEntries> {
+        throw NotImplementedError("Not implemented")
     }
 
     override fun addTaskEntry(taskId: Long): TaskEntry {

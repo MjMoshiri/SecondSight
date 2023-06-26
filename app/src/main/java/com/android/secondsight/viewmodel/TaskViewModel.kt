@@ -24,17 +24,12 @@ class TaskViewModel @AssistedInject constructor(
 
     private val _taskEntries = MutableLiveData<TaskWithEntries>()
 
-
     init {
-        updateTaskEntry()
-    }
-
-    fun updateTaskEntry() {
         viewModelScope.launch {
-            val taskEntries = withContext(Dispatchers.IO) {
-                taskEntryRepository.getTaskEntries(taskId)
-            }
-            _taskEntries.postValue(taskEntries)
+            taskEntryRepository.getTaskEntries(taskId)
+                .collect { taskEntries ->
+                    _taskEntries.postValue(taskEntries)
+                }
         }
     }
 
@@ -50,7 +45,6 @@ class TaskViewModel @AssistedInject constructor(
         }
     }
 
-
     override fun onCleared() {
         super.onCleared()
         viewModelJob.cancel()
@@ -61,5 +55,6 @@ class TaskViewModel @AssistedInject constructor(
 interface TaskViewModelFactory {
     fun create(taskId: Long): TaskViewModel
 }
+
 
 

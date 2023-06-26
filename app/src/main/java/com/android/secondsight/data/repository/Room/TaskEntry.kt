@@ -5,6 +5,7 @@ import com.android.secondsight.data.TaskEntry
 import com.android.secondsight.data.TaskWithEntries
 import com.android.secondsight.data.dao.TaskEntryDao
 import com.android.secondsight.data.repository.TaskEntryRepository
+import kotlinx.coroutines.flow.Flow
 import java.time.Duration
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -13,7 +14,7 @@ class RoomTaskEntryRepository @Inject constructor(
     private val taskEntryDao: TaskEntryDao
 ) : TaskEntryRepository {
 
-    override fun getTaskEntries(taskId: Long): TaskWithEntries {
+    override fun getTaskEntries(taskId: Long): Flow<TaskWithEntries> {
         return taskEntryDao.getTaskEntries(taskId)
     }
 
