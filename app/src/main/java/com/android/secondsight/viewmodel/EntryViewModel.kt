@@ -44,10 +44,6 @@ class EntryViewModel @AssistedInject constructor(
     val isCompleted: LiveData<Boolean>
         get() = _isCompleted
 
-    private val _isRunning = MutableLiveData<Boolean>()
-
-    val isRunning: LiveData<Boolean>
-        get() = _isRunning
 
     init {
         loadTaskEntry()
@@ -70,7 +66,6 @@ class EntryViewModel @AssistedInject constructor(
                 _taskEntry.postValue(taskEntry)
                 _time.postValue(taskEntry.duration)
                 _isCompleted.postValue(taskEntry.isComplete)
-                _isRunning.postValue(taskEntry.isRunning)
                 runNotificationService(taskEntry.isRunning!!, taskEntry.isComplete)
             }
         }
@@ -87,7 +82,8 @@ class EntryViewModel @AssistedInject constructor(
                 val curTime = Duration.between(
                     curStart, java.time.LocalDateTime.now()
                 )
-                _time.postValue(_taskEntry.value?.duration?.plus(curTime))
+                val curDuration = _taskEntry.value?.duration!!
+                _time.postValue(curDuration.plus(curTime))
                 delay(5)
             }
         }
@@ -100,7 +96,7 @@ class EntryViewModel @AssistedInject constructor(
                     taskEntryRepository.pauseTaskEntry(entryId)
                 }
                 _taskEntry.postValue(pausedEntry)
-                _isRunning.postValue(false)
+                _time.postValue(pausedEntry.duration)
                 runNotificationService(isRunning = false, isCompleted = false)
             }
         }
@@ -113,7 +109,6 @@ class EntryViewModel @AssistedInject constructor(
                     taskEntryRepository.resumeTaskEntry(entryId)
                 }
                 _taskEntry.postValue(resumedEntry)
-                _isRunning.postValue(true)
                 updateTime()
                 runNotificationService(isRunning = true, isCompleted = false)
             }
@@ -128,7 +123,6 @@ class EntryViewModel @AssistedInject constructor(
                 }
                 _taskEntry.postValue(endedEntry)
                 _isCompleted.postValue(true)
-                _isRunning.postValue(false)
                 runNotificationService(isRunning = false, isCompleted = true)
             }
         }

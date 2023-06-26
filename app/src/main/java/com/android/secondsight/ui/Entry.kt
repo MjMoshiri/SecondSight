@@ -44,7 +44,7 @@ fun EntryScreen(
             textAlign = TextAlign.Center,
             modifier = Modifier.align(Alignment.Center)
         )
-        Button( // Delete button
+        Button(
             onClick = { showDialog = true },
             modifier = Modifier.align(Alignment.TopStart)
         ) {
