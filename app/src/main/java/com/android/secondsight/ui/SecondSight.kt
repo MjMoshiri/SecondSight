@@ -51,13 +51,15 @@ fun SecondSight(
         gesturesEnabled = drawerState.isOpen,
         drawerContent = {
             ModalDrawerSheet {
-                Text("Theme", modifier = Modifier.padding(16.dp))
+                Text("Setting", modifier = Modifier.padding(16.dp))
                 Divider()
                 Row(
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth()
+                    , verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                 ) {
+                    Text("Theme", modifier = Modifier.weight(1f))
                     Spacer(modifier = Modifier.weight(1f))
                     ThemeSwitcher(size = 50.dp, darkTheme = darkTheme.value, onClick = {
                         darkTheme.value = !darkTheme.value

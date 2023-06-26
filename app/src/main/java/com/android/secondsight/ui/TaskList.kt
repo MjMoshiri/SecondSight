@@ -75,10 +75,11 @@ fun TaskListScreen(
             )
         }
         if (newTaskDialogShown.value) {
-            CreateOrUpdateTaskDialog(onConfirm = { name, description ->
-                viewModel.addTask(name, description)
-                newTaskDialogShown.value = false
-            },
+            CreateOrUpdateTaskDialog(
+                onConfirm = { name, description ->
+                    viewModel.addTask(name, description)
+                    newTaskDialogShown.value = false
+                },
                 onCancel = { newTaskDialogShown.value = false },
                 initialName = "",
                 initialDescription = ""
@@ -120,28 +121,27 @@ fun TaskList(
 
 
             if (isUpdateDialogOpen) {
-                CreateOrUpdateTaskDialog(onConfirm = { newName, newDescription ->
-                    updateTask(newName, newDescription, task)
-                    isUpdateDialogOpen = false
-                },
+                CreateOrUpdateTaskDialog(
+                    onConfirm = { newName, newDescription ->
+                        updateTask(newName, newDescription, task)
+                        isUpdateDialogOpen = false
+                    },
                     onCancel = { isUpdateDialogOpen = false },
                     initialName = task.name,
                     initialDescription = task.description ?: ""
                 )
             }
 
-
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onTaskClick(task.id) },
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(text = task.name)
-                    task.description?.let { description ->
-                        Text(text = description)
-                    }
+                Text(text = task.name)
+                task.description?.let { description ->
+                    Text(text = description)
                 }
                 Row {
                     IconButton(onClick = { isUpdateDialogOpen = true }) {

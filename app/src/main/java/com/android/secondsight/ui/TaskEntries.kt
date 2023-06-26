@@ -91,7 +91,8 @@ fun EntryItem(entry: TaskEntry, selectEntry: (Long) -> Unit, deleteEntry: (Long)
             .fillMaxWidth()
             .padding(8.dp)
             .clickable { selectEntry(entry.id) },
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(text = entry.start.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")))
         Text(text = if (entry.isRunning!!) "Running" else getDurationString(entry.duration))
