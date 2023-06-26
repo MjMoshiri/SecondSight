@@ -50,6 +50,7 @@ class EntryViewModel @AssistedInject constructor(
         updateTime()
     }
 
+    private var durationLock: Boolean = false
 
     private fun runNotificationService(isRunning: Boolean, isCompleted: Boolean) {
         if (isCompleted) {
@@ -76,7 +77,7 @@ class EntryViewModel @AssistedInject constructor(
             while (_taskEntry.value?.curStart == null) {
                 delay(3)
             }
-            while (true) {
+            while (!durationLock) {
                 val curStart = _taskEntry.value?.curStart
                 curStart ?: break
                 val curTime = Duration.between(
@@ -90,6 +91,7 @@ class EntryViewModel @AssistedInject constructor(
     }
 
     fun pauseTaskEntry() {
+        durationLock = true
         viewModelScope.launch {
             if (_taskEntry.value?.isRunning == true) {
                 val pausedEntry = withContext(Dispatchers.IO) {
@@ -103,6 +105,7 @@ class EntryViewModel @AssistedInject constructor(
     }
 
     fun resumeTaskEntry() {
+        durationLock = false
         viewModelScope.launch {
             if (_taskEntry.value?.isRunning == false) {
                 val resumedEntry = withContext(Dispatchers.IO) {
@@ -116,6 +119,7 @@ class EntryViewModel @AssistedInject constructor(
     }
 
     fun endTaskEntry() {
+        durationLock = true
         viewModelScope.launch {
             if (_taskEntry.value?.isComplete == false) {
                 val endedEntry = withContext(Dispatchers.IO) {

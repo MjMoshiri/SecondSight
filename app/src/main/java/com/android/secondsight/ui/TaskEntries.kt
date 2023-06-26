@@ -50,7 +50,7 @@ fun EntryListScreen(
         }
         FloatingActionButton(
             onClick = {
-               viewModel.addTaskEntry(createEntry)
+                viewModel.addTaskEntry(createEntry)
             }, modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
@@ -87,8 +87,8 @@ fun EntryItem(entry: TaskEntry, selectEntry: (Long) -> Unit) {
                 selectEntry(entry.id)
             }, horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = entry.start.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-        Text(text = getDurationString(entry.duration))
+        Text(text = entry.start.format(DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")))
+        Text(text = if (entry.isRunning!!) "Running" else getDurationString(entry.duration))
     }
 }
 
