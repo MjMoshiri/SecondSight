@@ -31,14 +31,14 @@ import androidx.navigation.compose.rememberNavController
 import com.android.secondsight.Screen
 import com.android.secondsight.ui.util.ThemeSwitcher
 import com.android.secondsight.viewmodel.TaskListViewModel
-import com.android.secondsight.viewmodel.provider.vmProvider
+import com.android.secondsight.viewmodel.provider.ViewModelProvider
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SecondSight(
     viewModel: TaskListViewModel,
-    vmProvider: vmProvider,
+    ViewModelProvider: ViewModelProvider,
     navController: NavHostController = rememberNavController(),
     darkTheme: MutableState<Boolean>
 ) {
@@ -96,7 +96,7 @@ fun SecondSight(
                     }
                     composable("task_detail/{taskId}") {
                         val taskId = it.arguments?.getString("taskId")!!.toLong()
-                        EntryListScreen(viewModel = vmProvider.getTaskViewModel(taskId),
+                        EntryListScreen(viewModel = ViewModelProvider.getTaskViewModel(taskId),
                             pd = innerPadding,
                             createEntry = { entryId ->
                                 navController.navigate("task_detail/$taskId/entry_detail/$entryId")
@@ -107,7 +107,7 @@ fun SecondSight(
                     }
                     composable("task_detail/{taskId}/entry_detail/{entryId}") {
                         val entryId = it.arguments?.getString("entryId")!!.toLong()
-                        EntryScreen(viewModel = vmProvider.getEntryViewModel(entryId),
+                        EntryScreen(viewModel = ViewModelProvider.getEntryViewModel(entryId),
                             pd = innerPadding,
                             stopEntry = { taskId ->
                                 navController.popBackStack("task_detail/$taskId", false)

@@ -6,10 +6,10 @@ import kotlinx.coroutines.flow.Flow
 
 interface TaskEntryRepository {
     fun getTaskEntries(taskId: Long): Flow<TaskWithEntries>
-    fun getTaskEntry(id: Long): TaskEntry
+    fun getTaskEntry(id: Long): Flow<TaskEntry>
     fun addTaskEntry(taskId: Long): TaskEntry
-    fun pauseTaskEntry(id: Long): TaskEntry
-    fun resumeTaskEntry(id: Long): TaskEntry
-    fun endTaskEntry(id: Long): TaskEntry
-    fun deleteTaskEntry(id: Long)
+    suspend fun pauseTaskEntry(id: Long)
+    suspend fun resumeTaskEntry(id: Long)
+    suspend fun endTaskEntry(id: Long)
+    suspend fun deleteTaskEntry(id: Long)
 }

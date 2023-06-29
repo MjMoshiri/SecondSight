@@ -9,29 +9,15 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class vmProvider @Inject constructor(
+class ViewModelProvider @Inject constructor(
     private val entryFactory: EntryViewModelFactory,
     private val taskFactory: TaskViewModelFactory,
-) : ViewModelProvider.Factory {
-    private val entryMap = mutableMapOf<Long, EntryViewModel>()
-    private val taskMap = mutableMapOf<Long, TaskViewModel>()
+) : ViewModelProvider.Factory{
     fun getEntryViewModel(id: Long): EntryViewModel {
-        return entryMap.getOrPut(id) {
-            entryFactory.create(id)
-        }
+        return entryFactory.create(id)
     }
 
     fun getTaskViewModel(id: Long): TaskViewModel {
-        return taskMap.getOrPut(id) {
-            taskFactory.create(id)
-        }
-    }
-
-    fun removeTaskViewModel(id: Long) {
-        taskMap.remove(id)
-    }
-
-    fun removeEntryViewModel(id: Long) {
-        entryMap.remove(id)
+        return taskFactory.create(id)
     }
 }

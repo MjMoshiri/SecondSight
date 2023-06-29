@@ -12,8 +12,8 @@ class InMemoryTaskEntryRepository : TaskEntryRepository {
     private val taskEntries = mutableMapOf<Long, TaskEntry>()
     private var currentId: Long = 0
 
-    override fun getTaskEntry(id: Long): TaskEntry {
-        return taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
+    override fun getTaskEntry(id: Long) : Flow<TaskEntry> {
+       throw NotImplementedError("Not implemented")
     }
 
     override fun getTaskEntries(taskId: Long): Flow<TaskWithEntries> {
@@ -37,7 +37,7 @@ class InMemoryTaskEntryRepository : TaskEntryRepository {
         return taskEntry
     }
 
-    override fun pauseTaskEntry(id: Long): TaskEntry {
+    override suspend fun pauseTaskEntry(id: Long){
         val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
         val curTime = LocalDateTime.now()
         val start = taskEntry.curStart!!
@@ -51,17 +51,15 @@ class InMemoryTaskEntryRepository : TaskEntryRepository {
                 )
             ), duration = duration, isRunning = false
         )
-        return taskEntries[id]!!
     }
 
-    override fun resumeTaskEntry(id: Long): TaskEntry {
+    override suspend fun resumeTaskEntry(id: Long){
         val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
         val curTime = LocalDateTime.now()
         taskEntries[id] = taskEntry.copy(curStart = curTime, isRunning = true)
-        return taskEntries[id]!!
     }
 
-    override fun endTaskEntry(id: Long): TaskEntry {
+    override suspend fun endTaskEntry(id: Long) {
         val taskEntry = taskEntries[id] ?: throw NoSuchElementException("Can't find the TaskEntry")
         val end = LocalDateTime.now()
         if (taskEntry.isRunning == true) {
@@ -77,10 +75,9 @@ class InMemoryTaskEntryRepository : TaskEntryRepository {
         } else {
             taskEntries[id] = taskEntry.copy(isComplete = true, end = end)
         }
-        return taskEntries[id]!!
     }
 
-    override fun deleteTaskEntry(id: Long) {
+    override suspend fun deleteTaskEntry(id: Long) {
         taskEntries.remove(id)
     }
 }

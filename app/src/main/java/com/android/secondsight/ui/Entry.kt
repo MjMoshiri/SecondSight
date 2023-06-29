@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -24,9 +24,9 @@ import com.android.secondsight.viewmodel.EntryViewModel
 fun EntryScreen(
     viewModel: EntryViewModel, pd: PaddingValues, stopEntry: (Long) -> Unit
 ) {
-    val taskEntry = viewModel.taskEntry.observeAsState()
-    val duration by viewModel.time.observeAsState()
-    val isComplete by viewModel.isCompleted.observeAsState()
+    val taskEntry by viewModel.taskEntry.collectAsState()
+    val duration by viewModel.time.collectAsState()
+    val isComplete by viewModel.isCompleted.collectAsState()
 
     Box(
         modifier = Modifier
@@ -52,21 +52,21 @@ fun EntryScreen(
                 Button(modifier = Modifier
                     .weight(1f)
                     .padding(end = 8.dp), onClick = {
-                    if (taskEntry.value?.isRunning == true) {
+                    if (taskEntry?.isRunning == true) {
                         viewModel.pauseTaskEntry()
                     } else {
                         viewModel.resumeTaskEntry()
                     }
                 }) {
                     Text(
-                        text = if (taskEntry.value?.isRunning == true) "Pause" else "Resume"
+                        text = if (taskEntry?.isRunning == true) "Pause" else "Resume"
                     )
                 }
                 Button(modifier = Modifier
                     .weight(1f)
                     .padding(start = 8.dp), onClick = {
                     viewModel.endTaskEntry()
-                    stopEntry(taskEntry.value?.id!!)
+                    taskEntry?.id?.let { stopEntry(it) }
                 }) {
                     Text(text = "Stop")
                 }

@@ -16,7 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.android.secondsight.ui.theme.SecondSightTheme
 import com.android.secondsight.viewmodel.TaskListViewModel
-import com.android.secondsight.viewmodel.provider.vmProvider
+import com.android.secondsight.viewmodel.provider.ViewModelProvider
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
     private val viewModel: TaskListViewModel by viewModels()
 
     @Inject
-    lateinit var vmProvider: vmProvider
+    lateinit var ViewModelProvider: ViewModelProvider
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
 
             SecondSightTheme(darkTheme = darkTheme.value) {
                 SecondSight(
-                    viewModel, vmProvider, darkTheme = darkTheme
+                    viewModel, ViewModelProvider, darkTheme = darkTheme
                 )
             }
         }

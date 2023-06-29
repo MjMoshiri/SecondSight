@@ -4,30 +4,39 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.CallSuper
-import com.android.secondsight.viewmodel.provider.vmProvider
+import com.android.secondsight.data.repository.TaskEntryRepository
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class Receiver : HiltBroadcastReceiver() {
     @Inject
-    lateinit var vmProvider: vmProvider
+    lateinit var taskEntryRepository: TaskEntryRepository
+
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         val action = intent.action!!.substringBeforeLast("!")
         val entryId = intent.action!!.substringAfterLast("!").toLong()
-        val entryViewModel = vmProvider.getEntryViewModel(entryId)
+
         when (action) {
             "action.pause" -> {
-                entryViewModel.pauseTaskEntry()
+                CoroutineScope(Dispatchers.IO).launch {
+                    taskEntryRepository.pauseTaskEntry(entryId)
+                }
             }
-
             "action.resume" -> {
-                entryViewModel.resumeTaskEntry()
+                CoroutineScope(Dispatchers.IO).launch {
+                    taskEntryRepository.resumeTaskEntry(entryId)
+                }
             }
 
             "action.stop" -> {
-                entryViewModel.endTaskEntry()
+                CoroutineScope(Dispatchers.IO).launch {
+                    taskEntryRepository.endTaskEntry(entryId)
+                }
             }
 
             else -> println("Unknown action")

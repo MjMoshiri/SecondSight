@@ -16,7 +16,7 @@ interface TaskEntryDao {
     fun getTaskEntries(taskId: Long): Flow<TaskWithEntries>
 
     @Query("SELECT * FROM TaskEntry WHERE id = :id")
-    fun getTaskEntry(id: Long): TaskEntry
+    fun getTaskEntry(id: Long): Flow<TaskEntry>
 
     @Insert
     fun addTaskEntry(taskEntry: TaskEntry): Long
