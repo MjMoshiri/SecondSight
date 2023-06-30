@@ -20,7 +20,10 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -30,7 +33,9 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.android.secondsight.Screen
 import com.android.secondsight.ui.util.ThemeSwitcher
+import com.android.secondsight.viewmodel.EntryViewModel
 import com.android.secondsight.viewmodel.TaskListViewModel
+import com.android.secondsight.viewmodel.TaskViewModel
 import com.android.secondsight.viewmodel.provider.ViewModelProvider
 import kotlinx.coroutines.launch
 
@@ -46,7 +51,8 @@ fun SecondSight(
     val currentRoute = backStackEntry?.destination?.route
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
-
+    var entryViewModel by remember { mutableStateOf<EntryViewModel?>(null) }
+    var taskEntryViewModel by remember { mutableStateOf<TaskViewModel?>(null) }
     ModalNavigationDrawer(drawerState = drawerState,
         gesturesEnabled = drawerState.isOpen,
         drawerContent = {
@@ -56,8 +62,8 @@ fun SecondSight(
                 Row(
                     modifier = Modifier
                         .padding(16.dp)
-                        .fillMaxWidth()
-                    , verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        .fillMaxWidth(),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                 ) {
                     Text("Theme", modifier = Modifier.weight(1f))
                     Spacer(modifier = Modifier.weight(1f))
@@ -75,7 +81,7 @@ fun SecondSight(
                             Screen.TaskList.route -> "Tasks"
                             Screen.TaskDetail.route -> "Entries"
                             Screen.Entry.route -> "Entry"
-                            else -> "Second Sight"
+                            else -> "$currentRoute"
                         }
                     )
                 }, actions = {
@@ -91,26 +97,31 @@ fun SecondSight(
                 NavHost(navController = navController, startDestination = "task_list") {
                     composable("task_list") {
                         TaskListScreen(viewModel, pd = innerPadding, onTaskClick = { taskId ->
-                            navController.navigate("task_detail/$taskId")
+                            println("task_list")
+                            taskEntryViewModel = VMProvider.getTaskViewModel(taskId)
+                            navController.navigate("task_detail")
                         })
                     }
-                    composable("task_detail/{taskId}") {
-                        val taskId = it.arguments?.getString("taskId")!!.toLong()
-                        EntryListScreen(viewModel = VMProvider.getTaskViewModel(taskId),
+                    composable("task_detail") {
+                        println("$taskEntryViewModel")
+                        EntryListScreen(viewModel = taskEntryViewModel!!,
                             pd = innerPadding,
                             createEntry = { entryId ->
-                                navController.navigate("task_detail/$taskId/entry_detail/$entryId")
+                                entryViewModel = VMProvider.getEntryViewModel(entryId)
+                                navController.navigate("task_detail/entry_detail")
                             },
                             selectEntry = { entryId ->
-                                navController.navigate("task_detail/$taskId/entry_detail/$entryId")
+                                entryViewModel = VMProvider.getEntryViewModel(entryId)
+                                navController.navigate("task_detail/entry_detail")
                             })
                     }
-                    composable("task_detail/{taskId}/entry_detail/{entryId}") {
-                        val entryId = it.arguments?.getString("entryId")!!.toLong()
-                        EntryScreen(viewModel = VMProvider.getEntryViewModel(entryId),
+                    composable("task_detail/entry_detail") {
+                        EntryScreen(
+                            viewModel = entryViewModel!!,
                             pd = innerPadding,
                             stopEntry = { taskId ->
-                                navController.popBackStack("task_detail/$taskId", false)
+                                taskEntryViewModel = VMProvider.getTaskViewModel(taskId)
+                                navController.popBackStack("task_detail", inclusive = false)
                             })
                     }
                 }

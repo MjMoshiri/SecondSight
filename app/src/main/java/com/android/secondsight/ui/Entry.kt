@@ -37,9 +37,13 @@ fun EntryScreen(
     ) {
         DurationDisplay(viewModel)
     }
-    ControlPanel(
-        viewModel, stopEntry
-    )
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(pd), contentAlignment = Alignment.BottomCenter
+    ) {
+        ControlPanel(viewModel, stopEntry)
+    }
 }
 
 @Composable
@@ -56,10 +60,10 @@ fun ControlPanel(
     viewModel: EntryViewModel,
     stopEntry: (Long) -> Unit,
 ) {
-    val isComplete by viewModel.isComplete.collectAsState()
-    val isRunning by viewModel.isRunning.collectAsState()
+    val taskEntry by viewModel.taskEntry.collectAsState()
 
-    if (isComplete == false) {
+    taskEntry?.let {
+        if (it.isComplete) return
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -71,21 +75,21 @@ fun ControlPanel(
                 Button(modifier = Modifier
                     .weight(1f)
                     .padding(end = 8.dp), onClick = {
-                    if (isRunning == true) {
+                    if (it.isRunning == true) {
                         viewModel.pauseTaskEntry()
                     } else {
                         viewModel.resumeTaskEntry()
                     }
                 }) {
                     Text(
-                        text = if (isRunning == true) "Pause" else "Resume"
+                        text = if (it.isRunning == true) "Pause" else "Resume"
                     )
                 }
                 Button(modifier = Modifier
                     .weight(1f)
                     .padding(start = 8.dp), onClick = {
                     viewModel.endTaskEntry()
-                    stopEntry(viewModel.entryId)
+                    stopEntry(it.taskId)
                 }) {
                     Text(text = "Stop")
                 }

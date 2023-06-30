@@ -1,6 +1,7 @@
 package com.android.secondsight.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.android.secondsight.data.TaskEntry
 import com.android.secondsight.data.repository.TaskEntryRepository
 import com.android.secondsight.ui.notif.EntryNotificationService
 import dagger.assisted.Assisted
@@ -20,21 +21,23 @@ import java.time.LocalDateTime
 class EntryViewModel @AssistedInject constructor(
     private val taskEntryRepository: TaskEntryRepository,
     private val notificationManager: EntryNotificationService,
-    @Assisted val entryId: Long,
+    @Assisted private val entryId: Long,
 ) : ViewModel() {
 
     private val viewModelJob = SupervisorJob()
     private val viewModelScope = CoroutineScope(Dispatchers.Main + viewModelJob)
     private val _time = MutableStateFlow<Duration?>(null)
-    private val _isComplete = MutableStateFlow<Boolean?>(false)
-    private val _isRunning = MutableStateFlow<Boolean?>(true)
+    private val _taskEntry = MutableStateFlow<TaskEntry?>(null)
+    private var isLoading = true
+
 
     init {
+        isLoading = true
         viewModelScope.launch {
             taskEntryRepository.getTaskEntry(entryId).collect { taskEntry ->
                 _time.value = taskEntry?.duration
-                _isComplete.value = taskEntry?.isComplete
-                _isRunning.value = taskEntry?.isRunning
+                _taskEntry.value = taskEntry
+                isLoading = false
                 if (taskEntry?.isRunning == true) {
                     updateTime()
                 }
@@ -45,30 +48,27 @@ class EntryViewModel @AssistedInject constructor(
     val time: StateFlow<Duration?>
         get() = _time
 
-    val isComplete: StateFlow<Boolean?>
-        get() = _isComplete
-
-    val isRunning: StateFlow<Boolean?>
-        get() = _isRunning
+    val taskEntry: StateFlow<TaskEntry?>
+        get() = _taskEntry
 
     fun setNotif(isCompleted: Boolean) = viewModelScope.launch {
         if (isCompleted) {
             notificationManager.stop(entryId)
         } else {
-            notificationManager.show(entryId, _isRunning.value == true)
+            notificationManager.show(entryId, _taskEntry.value?.isRunning == true)
         }
     }
 
     fun setNotif() = viewModelScope.launch {
-        while (_isComplete.value == null) {
+        while (isLoading) {
             delay(10)
         }
-        setNotif(_isComplete.value == true)
+        setNotif(_taskEntry.value?.isComplete == true)
     }
 
     private fun updateTime() = viewModelScope.launch {
         while (true) {
-            if (_isRunning.value == true) {
+            if (_taskEntry.value?.isRunning == true) {
                 val taskEntry = taskEntryRepository.getTaskEntry(entryId).firstOrNull()
                 val curStart = taskEntry?.curStart
                 curStart?.let {
@@ -78,28 +78,27 @@ class EntryViewModel @AssistedInject constructor(
             } else {
                 break
             }
-            delay(10)
+            delay(5)
         }
     }
 
     fun pauseTaskEntry() = viewModelScope.launch {
-        if (_isRunning.value == true) {
+        if (_taskEntry.value?.isRunning == true) {
             taskEntryRepository.pauseTaskEntry(entryId)
-            _isRunning.value = false
+            setNotif(false)
         }
     }
 
     fun resumeTaskEntry() = viewModelScope.launch {
-        if (_isRunning.value == false) {
+        if (_taskEntry.value?.isRunning == false) {
             taskEntryRepository.resumeTaskEntry(entryId)
-            _isRunning.value = true
+            setNotif(false)
         }
     }
 
     fun endTaskEntry() = viewModelScope.launch {
-        if (_isComplete.value == false) {
+        if (_taskEntry.value?.isComplete == false) {
             taskEntryRepository.endTaskEntry(entryId)
-            _isComplete.value = true
             setNotif(true)
         }
     }
