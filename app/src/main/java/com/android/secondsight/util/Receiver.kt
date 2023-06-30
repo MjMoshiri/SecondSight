@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.annotation.CallSuper
 import com.android.secondsight.data.repository.TaskEntryRepository
+import com.android.secondsight.ui.notif.EntryNotificationService
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +16,8 @@ import javax.inject.Inject
 class Receiver : HiltBroadcastReceiver() {
     @Inject
     lateinit var taskEntryRepository: TaskEntryRepository
-
+    @Inject
+    lateinit var notificationManager: EntryNotificationService
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         val action = intent.action!!.substringBeforeLast("!")
@@ -25,17 +27,27 @@ class Receiver : HiltBroadcastReceiver() {
             "action.pause" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     taskEntryRepository.pauseTaskEntry(entryId)
+                    notificationManager.show(entryId, false)
                 }
             }
+
             "action.resume" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     taskEntryRepository.resumeTaskEntry(entryId)
+                    notificationManager.show(entryId, true)
                 }
             }
 
             "action.stop" -> {
                 CoroutineScope(Dispatchers.IO).launch {
                     taskEntryRepository.endTaskEntry(entryId)
+                    notificationManager.stop(entryId)
+                }
+            }
+
+            "action.delete" -> {
+                CoroutineScope(Dispatchers.IO).launch {
+                    notificationManager.stop(entryId)
                 }
             }
 

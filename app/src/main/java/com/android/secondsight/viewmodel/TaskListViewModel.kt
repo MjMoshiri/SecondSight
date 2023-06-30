@@ -1,6 +1,5 @@
 package com.android.secondsight.viewmodel
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.android.secondsight.data.Task
@@ -22,8 +21,8 @@ class TaskListViewModel @Inject constructor(
 
     private val viewModelScope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
-    private val _tasks = MutableLiveData<List<Task>>()
-    val tasks: LiveData<List<Task>> = _tasks
+    private val _tasks = MutableLiveData<List<Task>?>()
+    val tasks: MutableLiveData<List<Task>?> = _tasks
 
     init {
         loadTasks()

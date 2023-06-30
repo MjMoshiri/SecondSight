@@ -57,12 +57,14 @@ fun TaskListScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            TaskList(tasks = tasks,
-                onTaskClick = onTaskClick,
-                deleteTask = { viewModel.deleteTask(it) },
-                updateTask = { name, description, task ->
-                    viewModel.updateTask(name, description, task)
-                })
+            tasks?.let {
+                TaskList(tasks = it,
+                    onTaskClick = onTaskClick,
+                    deleteTask = { viewModel.deleteTask(it) },
+                    updateTask = { name, description, task ->
+                        viewModel.updateTask(name, description, task)
+                    })
+            }
         }
         FloatingActionButton(
             onClick = { newTaskDialogShown.value = true },

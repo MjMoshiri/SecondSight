@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SecondSight(
     viewModel: TaskListViewModel,
-    ViewModelProvider: ViewModelProvider,
+    VMProvider: ViewModelProvider,
     navController: NavHostController = rememberNavController(),
     darkTheme: MutableState<Boolean>
 ) {
@@ -96,7 +96,7 @@ fun SecondSight(
                     }
                     composable("task_detail/{taskId}") {
                         val taskId = it.arguments?.getString("taskId")!!.toLong()
-                        EntryListScreen(viewModel = ViewModelProvider.getTaskViewModel(taskId),
+                        EntryListScreen(viewModel = VMProvider.getTaskViewModel(taskId),
                             pd = innerPadding,
                             createEntry = { entryId ->
                                 navController.navigate("task_detail/$taskId/entry_detail/$entryId")
@@ -107,7 +107,7 @@ fun SecondSight(
                     }
                     composable("task_detail/{taskId}/entry_detail/{entryId}") {
                         val entryId = it.arguments?.getString("entryId")!!.toLong()
-                        EntryScreen(viewModel = ViewModelProvider.getEntryViewModel(entryId),
+                        EntryScreen(viewModel = VMProvider.getEntryViewModel(entryId),
                             pd = innerPadding,
                             stopEntry = { taskId ->
                                 navController.popBackStack("task_detail/$taskId", false)

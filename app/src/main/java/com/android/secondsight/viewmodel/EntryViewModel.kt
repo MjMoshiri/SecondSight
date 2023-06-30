@@ -1,5 +1,5 @@
 package com.android.secondsight.viewmodel
-import android.content.Context
+
 import androidx.lifecycle.ViewModel
 import com.android.secondsight.data.TaskEntry
 import com.android.secondsight.data.repository.TaskEntryRepository
@@ -20,30 +20,24 @@ import java.time.LocalDateTime
 
 class EntryViewModel @AssistedInject constructor(
     private val taskEntryRepository: TaskEntryRepository,
-    private val context: Context,
+    private val notificationManager: EntryNotificationService,
     @Assisted private val entryId: Long,
 ) : ViewModel() {
 
-
     private val viewModelJob = SupervisorJob()
     private val viewModelScope = CoroutineScope(Dispatchers.Main + viewModelJob)
-
     private val _taskEntry = MutableStateFlow<TaskEntry?>(null)
     private val _time = MutableStateFlow<Duration?>(null)
-    private val _isCompleted = MutableStateFlow<Boolean?>(null)
 
     init {
         viewModelScope.launch {
-            taskEntryRepository.getTaskEntry(entryId)
-                .collect { taskEntry ->
-                    _taskEntry.value = taskEntry
-                    _time.value = taskEntry?.duration
-                    _isCompleted.value = taskEntry?.isComplete
-                    runNotificationService(taskEntry?.isRunning ?: false, taskEntry?.isComplete ?: false)
-                    if (taskEntry?.isRunning == true) {
-                        updateTime()
-                    }
+            taskEntryRepository.getTaskEntry(entryId).collect { taskEntry ->
+                _taskEntry.value = taskEntry
+                _time.value = taskEntry?.duration
+                if (taskEntry?.isRunning == true) {
+                    updateTime()
                 }
+            }
         }
     }
 
@@ -53,15 +47,19 @@ class EntryViewModel @AssistedInject constructor(
     val time: StateFlow<Duration?>
         get() = _time
 
-    val isCompleted: StateFlow<Boolean?>
-        get() = _isCompleted
-
-    private fun runNotificationService(isRunning: Boolean, isCompleted: Boolean) {
+    fun setNotif(isCompleted: Boolean) = viewModelScope.launch {
         if (isCompleted) {
-            EntryNotificationService(context, entryId, false).stop()
+            notificationManager.stop(entryId)
         } else {
-            EntryNotificationService(context, entryId, isRunning).show()
+            notificationManager.show(entryId, _taskEntry.value?.isRunning == true)
         }
+    }
+
+    fun setNotif() = viewModelScope.launch {
+        while (_taskEntry.value == null) {
+            delay(10)
+        }
+        setNotif(_taskEntry.value?.isComplete == true)
     }
 
     private fun updateTime() = viewModelScope.launch {
@@ -76,7 +74,7 @@ class EntryViewModel @AssistedInject constructor(
             } else {
                 break
             }
-            delay(5)
+            delay(10)
         }
     }
 
@@ -84,7 +82,6 @@ class EntryViewModel @AssistedInject constructor(
         if (_taskEntry.value?.isRunning == true) {
             taskEntryRepository.pauseTaskEntry(entryId)
             _taskEntry.value = taskEntryRepository.getTaskEntry(entryId).firstOrNull()
-
         }
     }
 
@@ -92,7 +89,6 @@ class EntryViewModel @AssistedInject constructor(
         if (_taskEntry.value?.isRunning == false) {
             taskEntryRepository.resumeTaskEntry(entryId)
             _taskEntry.value = taskEntryRepository.getTaskEntry(entryId).firstOrNull()
-
         }
     }
 
@@ -100,17 +96,10 @@ class EntryViewModel @AssistedInject constructor(
         if (_taskEntry.value?.isComplete == false) {
             taskEntryRepository.endTaskEntry(entryId)
             _taskEntry.value = taskEntryRepository.getTaskEntry(entryId).firstOrNull()
+            setNotif(true)
         }
     }
-
-    override fun onCleared() {
-        super.onCleared()
-        // Ensure the notification service is stopped when ViewModel is cleared
-        runNotificationService(isRunning = false, isCompleted = true)
-        viewModelJob.cancel() //cancel the viewModelJob when the ViewModel is cleared
-    }
 }
-
 
 
 @AssistedFactory

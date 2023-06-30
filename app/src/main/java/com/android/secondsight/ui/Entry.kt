@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -22,25 +23,42 @@ import com.android.secondsight.viewmodel.EntryViewModel
 
 @Composable
 fun EntryScreen(
-    viewModel: EntryViewModel, pd: PaddingValues, stopEntry: (Long) -> Unit
+    viewModel: EntryViewModel,
+    pd: PaddingValues,
+    stopEntry: (Long) -> Unit,
 ) {
-    val taskEntry by viewModel.taskEntry.collectAsState()
-    val duration by viewModel.time.collectAsState()
-    val isComplete by viewModel.isCompleted.collectAsState()
-
+    LaunchedEffect(true) {
+        viewModel.setNotif()
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(pd),
-        contentAlignment = Alignment.Center
+            .padding(pd), contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = getDurationString(duration),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.align(Alignment.Center)
-        )
+        DurationDisplay(viewModel)
     }
-    if (isComplete == false) {
+    ControlPanel(
+        viewModel, stopEntry
+    )
+}
+
+@Composable
+fun DurationDisplay(viewModel: EntryViewModel) {
+    val duration by viewModel.time.collectAsState()
+    Text(
+        text = getDurationString(duration),
+        textAlign = TextAlign.Center,
+    )
+}
+
+@Composable
+fun ControlPanel(
+    viewModel: EntryViewModel,
+    stopEntry: (Long) -> Unit,
+) {
+    val taskEntry by viewModel.taskEntry.collectAsState()
+
+    if (taskEntry?.isComplete == false) {
         Column(
             modifier = Modifier
                 .fillMaxSize()

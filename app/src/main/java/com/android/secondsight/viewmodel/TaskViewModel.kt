@@ -1,7 +1,6 @@
 package com.android.secondsight.viewmodel
 
 
-import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -19,7 +18,7 @@ import kotlinx.coroutines.withContext
 
 class TaskViewModel @AssistedInject constructor(
     private val taskEntryRepository: TaskEntryRepository,
-    private val context: Context,
+    private val notificationManager: EntryNotificationService,
     @Assisted private val taskId: Long
 ) : ViewModel() {
     private val viewModelJob = SupervisorJob()
@@ -30,10 +29,9 @@ class TaskViewModel @AssistedInject constructor(
 
     init {
         viewModelScope.launch {
-            taskEntryRepository.getTaskEntries(taskId)
-                .collect { taskEntries ->
-                    _taskEntries.postValue(taskEntries)
-                }
+            taskEntryRepository.getTaskEntries(taskId).collect { taskEntries ->
+                _taskEntries.postValue(taskEntries)
+            }
         }
     }
 
@@ -53,11 +51,7 @@ class TaskViewModel @AssistedInject constructor(
         viewModelScope.launch {
             withContext(Dispatchers.IO) {
                 taskEntryRepository.deleteTaskEntry(entryId)
-                EntryNotificationService(
-                    context,
-                    entryId,
-                    false
-                ).stop()
+                notificationManager.stop(entryId)
             }
         }
     }

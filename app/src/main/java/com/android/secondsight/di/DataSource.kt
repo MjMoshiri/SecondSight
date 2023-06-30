@@ -9,6 +9,7 @@ import com.android.secondsight.data.repository.Room.RoomTaskRepository
 import com.android.secondsight.data.repository.TaskEntryRepository
 import com.android.secondsight.data.repository.TaskRepository
 import com.android.secondsight.databases.AppDB
+import com.android.secondsight.ui.notif.EntryNotificationService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -57,5 +58,11 @@ object DataSource {
     @Singleton
     fun provideContext(@ApplicationContext appContext: Context): Context {
         return appContext
+    }
+
+    @Provides
+    @Singleton
+    fun notificationManager(@ApplicationContext appContext: Context): EntryNotificationService {
+        return EntryNotificationService(appContext)
     }
 }
