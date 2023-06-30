@@ -56,9 +56,10 @@ fun ControlPanel(
     viewModel: EntryViewModel,
     stopEntry: (Long) -> Unit,
 ) {
-    val taskEntry by viewModel.taskEntry.collectAsState()
+    val isComplete by viewModel.isComplete.collectAsState()
+    val isRunning by viewModel.isRunning.collectAsState()
 
-    if (taskEntry?.isComplete == false) {
+    if (isComplete == false) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -70,21 +71,21 @@ fun ControlPanel(
                 Button(modifier = Modifier
                     .weight(1f)
                     .padding(end = 8.dp), onClick = {
-                    if (taskEntry?.isRunning == true) {
+                    if (isRunning == true) {
                         viewModel.pauseTaskEntry()
                     } else {
                         viewModel.resumeTaskEntry()
                     }
                 }) {
                     Text(
-                        text = if (taskEntry?.isRunning == true) "Pause" else "Resume"
+                        text = if (isRunning == true) "Pause" else "Resume"
                     )
                 }
                 Button(modifier = Modifier
                     .weight(1f)
                     .padding(start = 8.dp), onClick = {
                     viewModel.endTaskEntry()
-                    taskEntry?.id?.let { stopEntry(it) }
+                    stopEntry(viewModel.entryId)
                 }) {
                     Text(text = "Stop")
                 }

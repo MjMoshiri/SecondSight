@@ -1,7 +1,6 @@
 package com.android.secondsight.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.android.secondsight.data.TaskEntry
 import com.android.secondsight.data.repository.TaskEntryRepository
 import com.android.secondsight.ui.notif.EntryNotificationService
 import dagger.assisted.Assisted
@@ -21,19 +20,21 @@ import java.time.LocalDateTime
 class EntryViewModel @AssistedInject constructor(
     private val taskEntryRepository: TaskEntryRepository,
     private val notificationManager: EntryNotificationService,
-    @Assisted private val entryId: Long,
+    @Assisted val entryId: Long,
 ) : ViewModel() {
 
     private val viewModelJob = SupervisorJob()
     private val viewModelScope = CoroutineScope(Dispatchers.Main + viewModelJob)
-    private val _taskEntry = MutableStateFlow<TaskEntry?>(null)
     private val _time = MutableStateFlow<Duration?>(null)
+    private val _isComplete = MutableStateFlow<Boolean?>(false)
+    private val _isRunning = MutableStateFlow<Boolean?>(true)
 
     init {
         viewModelScope.launch {
             taskEntryRepository.getTaskEntry(entryId).collect { taskEntry ->
-                _taskEntry.value = taskEntry
                 _time.value = taskEntry?.duration
+                _isComplete.value = taskEntry?.isComplete
+                _isRunning.value = taskEntry?.isRunning
                 if (taskEntry?.isRunning == true) {
                     updateTime()
                 }
@@ -41,32 +42,35 @@ class EntryViewModel @AssistedInject constructor(
         }
     }
 
-    val taskEntry: StateFlow<TaskEntry?>
-        get() = _taskEntry
-
     val time: StateFlow<Duration?>
         get() = _time
+
+    val isComplete: StateFlow<Boolean?>
+        get() = _isComplete
+
+    val isRunning: StateFlow<Boolean?>
+        get() = _isRunning
 
     fun setNotif(isCompleted: Boolean) = viewModelScope.launch {
         if (isCompleted) {
             notificationManager.stop(entryId)
         } else {
-            notificationManager.show(entryId, _taskEntry.value?.isRunning == true)
+            notificationManager.show(entryId, _isRunning.value == true)
         }
     }
 
     fun setNotif() = viewModelScope.launch {
-        while (_taskEntry.value == null) {
+        while (_isComplete.value == null) {
             delay(10)
         }
-        setNotif(_taskEntry.value?.isComplete == true)
+        setNotif(_isComplete.value == true)
     }
 
     private fun updateTime() = viewModelScope.launch {
         while (true) {
-            val taskEntry = _taskEntry.value
-            if (taskEntry?.isRunning == true) {
-                val curStart = taskEntry.curStart
+            if (_isRunning.value == true) {
+                val taskEntry = taskEntryRepository.getTaskEntry(entryId).firstOrNull()
+                val curStart = taskEntry?.curStart
                 curStart?.let {
                     val curTime = Duration.between(it, LocalDateTime.now())
                     _time.value = taskEntry.duration.plus(curTime)
@@ -79,23 +83,23 @@ class EntryViewModel @AssistedInject constructor(
     }
 
     fun pauseTaskEntry() = viewModelScope.launch {
-        if (_taskEntry.value?.isRunning == true) {
+        if (_isRunning.value == true) {
             taskEntryRepository.pauseTaskEntry(entryId)
-            _taskEntry.value = taskEntryRepository.getTaskEntry(entryId).firstOrNull()
+            _isRunning.value = false
         }
     }
 
     fun resumeTaskEntry() = viewModelScope.launch {
-        if (_taskEntry.value?.isRunning == false) {
+        if (_isRunning.value == false) {
             taskEntryRepository.resumeTaskEntry(entryId)
-            _taskEntry.value = taskEntryRepository.getTaskEntry(entryId).firstOrNull()
+            _isRunning.value = true
         }
     }
 
     fun endTaskEntry() = viewModelScope.launch {
-        if (_taskEntry.value?.isComplete == false) {
+        if (_isComplete.value == false) {
             taskEntryRepository.endTaskEntry(entryId)
-            _taskEntry.value = taskEntryRepository.getTaskEntry(entryId).firstOrNull()
+            _isComplete.value = true
             setNotif(true)
         }
     }
