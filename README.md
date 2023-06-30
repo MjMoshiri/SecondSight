@@ -59,7 +59,6 @@ The development of SecondSight followed a layered and branch-based methodology. 
 * The app lacks thorough testing.
 * Data import/export functionality is not available.
 * Accessibility features are not available.
-* There are poor architecture design choices in some areas of the app (e.g. Repositories don't have proper listeners for data changes or Receiver class use of ViewModel).
 
 ## Documentation
 
