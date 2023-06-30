@@ -32,7 +32,6 @@ class EntryViewModel @AssistedInject constructor(
 
 
     init {
-        isLoading = true
         viewModelScope.launch {
             taskEntryRepository.getTaskEntry(entryId).collect { taskEntry ->
                 _time.value = taskEntry?.duration
@@ -55,7 +54,7 @@ class EntryViewModel @AssistedInject constructor(
         if (isCompleted) {
             notificationManager.stop(entryId)
         } else {
-            notificationManager.show(entryId, _taskEntry.value?.isRunning == true)
+            notificationManager.show(entryId, _taskEntry.value?.isRunning!!)
         }
     }
 
@@ -63,7 +62,7 @@ class EntryViewModel @AssistedInject constructor(
         while (isLoading) {
             delay(10)
         }
-        setNotif(_taskEntry.value?.isComplete == true)
+        setNotif(_taskEntry.value?.isComplete!!)
     }
 
     private fun updateTime() = viewModelScope.launch {
@@ -84,15 +83,17 @@ class EntryViewModel @AssistedInject constructor(
 
     fun pauseTaskEntry() = viewModelScope.launch {
         if (_taskEntry.value?.isRunning == true) {
+            isLoading = true
             taskEntryRepository.pauseTaskEntry(entryId)
-            setNotif(false)
+            setNotif()
         }
     }
 
     fun resumeTaskEntry() = viewModelScope.launch {
         if (_taskEntry.value?.isRunning == false) {
+            isLoading = true
             taskEntryRepository.resumeTaskEntry(entryId)
-            setNotif(false)
+            setNotif()
         }
     }
 
