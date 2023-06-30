@@ -97,13 +97,11 @@ fun SecondSight(
                 NavHost(navController = navController, startDestination = "task_list") {
                     composable("task_list") {
                         TaskListScreen(viewModel, pd = innerPadding, onTaskClick = { taskId ->
-                            println("task_list")
                             taskEntryViewModel = VMProvider.getTaskViewModel(taskId)
                             navController.navigate("task_detail")
                         })
                     }
                     composable("task_detail") {
-                        println("$taskEntryViewModel")
                         EntryListScreen(viewModel = taskEntryViewModel!!,
                             pd = innerPadding,
                             createEntry = { entryId ->
