@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../data/goal_repository.dart';
 import 'format.dart';
 import 'goal_card.dart';
+import 'goal_detail_screen.dart';
 import 'new_goal_sheet.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -85,6 +86,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         onResume: () => widget.repo.resume(goals[i].goal.id),
                         onStop: () => widget.repo.stop(goals[i].goal.id),
                         onDelete: () => _confirmDelete(goals[i]),
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => GoalDetailScreen(
+                              repo: widget.repo,
+                              goalId: goals[i].goal.id,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),

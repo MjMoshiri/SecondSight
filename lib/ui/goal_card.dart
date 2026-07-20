@@ -12,6 +12,7 @@ class GoalCard extends StatelessWidget {
   final VoidCallback onResume;
   final VoidCallback onStop;
   final VoidCallback onDelete;
+  final VoidCallback onTap;
 
   const GoalCard({
     super.key,
@@ -22,6 +23,7 @@ class GoalCard extends StatelessWidget {
     required this.onResume,
     required this.onStop,
     required this.onDelete,
+    required this.onTap,
   });
 
   @override
@@ -34,6 +36,7 @@ class GoalCard extends StatelessWidget {
     final daysLeft = p.window.daysLeft;
 
     return GestureDetector(
+      onTap: onTap,
       onLongPress: onDelete,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),

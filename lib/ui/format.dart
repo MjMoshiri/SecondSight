@@ -21,6 +21,18 @@ String fmtTicking(int ms) {
   return h > 0 ? '$h:$mm:$ss' : '$m:$ss';
 }
 
+const _months = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+];
+
+/// '2026-07-19' → 'Jul 19'.
+String fmtDay(String day) {
+  final month = int.parse(day.substring(5, 7));
+  final dayNum = int.parse(day.substring(8, 10));
+  return '${_months[month - 1]} $dayNum';
+}
+
 const goalHues = [
   Color(0xFF5EEAD4), // teal
   Color(0xFFFBBF24), // amber

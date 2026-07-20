@@ -37,6 +37,35 @@ class PeriodWindow {
   });
 }
 
+/// Every window from the goal's first day through the one containing
+/// [today], oldest first, capped at the [limit] most recent. The current
+/// window is always last. daysLeft is 0 for past windows.
+List<PeriodWindow> windowsThrough({
+  required String startDay,
+  required int periodDays,
+  required DateTime today,
+  int limit = 60,
+}) {
+  final start = _parseDayUtc(startDay);
+  final now = _parseDayUtc(formatDay(today));
+  var daysSince = now.difference(start).inDays;
+  if (daysSince < 0) daysSince = 0;
+  final currentIndex = daysSince ~/ periodDays;
+  final firstIndex = (currentIndex - limit + 1).clamp(0, currentIndex);
+  return [
+    for (var i = firstIndex; i <= currentIndex; i++)
+      () {
+        final winStart = start.add(Duration(days: i * periodDays));
+        return PeriodWindow(
+          startDay: formatDay(winStart),
+          endDay: formatDay(winStart.add(Duration(days: periodDays))),
+          daysLeft:
+              i == currentIndex ? periodDays - (daysSince % periodDays) : 0,
+        );
+      }(),
+  ];
+}
+
 PeriodWindow currentWindow({
   required String startDay,
   required int periodDays,
