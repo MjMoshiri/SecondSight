@@ -1,20 +1,23 @@
 import 'package:drift/drift.dart';
 
-/// A goal is a portion of time over repeated days, e.g. 400 minutes per 3 days.
+/// A goal is a portion of time per calendar period, e.g. 400 minutes weekly.
 ///
-/// Period windows are derived, never stored: window N covers
-/// [startDay + N * periodDays, startDay + (N + 1) * periodDays).
+/// Period windows are derived, never stored — they align to the calendar
+/// (daily = midnight, weekly/biweekly = Mondays, monthly = the 1st), so
+/// every goal with the same cadence shares the same window boundaries.
 class Goals extends Table {
   TextColumn get id => text()(); // uuid
   TextColumn get name => text()();
   IntColumn get targetMinutes => integer()();
-  IntColumn get periodDays => integer()();
+
+  /// GoalPeriod name: 'daily' | 'weekly' | 'biweekly' | 'monthly'.
+  TextColumn get period => text()();
 
   /// Display only: how many segments the progress bar is drawn with.
   /// Has no effect on tracking or progress math.
   IntColumn get sections => integer().withDefault(const Constant(1))();
 
-  /// Local day ('yyyy-MM-dd') the first period starts on.
+  /// Local day ('yyyy-MM-dd') the goal was created; bounds period history.
   TextColumn get startDay => text()();
 
   IntColumn get createdAtUtc => integer()();

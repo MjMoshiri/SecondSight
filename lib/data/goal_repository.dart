@@ -21,6 +21,7 @@ class GoalProgress {
   });
 
   int get targetMs => goal.targetMinutes * 60000;
+  GoalPeriod get period => GoalPeriod.values.byName(goal.period);
 
   bool get isRunning => timer?.isRunning ?? false;
   bool get isPaused => timer != null && !timer!.isRunning;
@@ -115,8 +116,7 @@ class GoalRepository {
       for (final goal in goals)
         () {
           final window = currentWindow(
-            startDay: goal.startDay,
-            periodDays: goal.periodDays,
+            period: GoalPeriod.values.byName(goal.period),
             today: today,
           );
           var logged = 0;
@@ -158,8 +158,8 @@ class GoalRepository {
     if (goal == null) return null;
     final today = _clock();
     final windows = windowsThrough(
-      startDay: goal.startDay,
-      periodDays: goal.periodDays,
+      period: GoalPeriod.values.byName(goal.period),
+      firstDay: goal.startDay,
       today: today,
     );
     final targetMs = goal.targetMinutes * 60000;
@@ -225,7 +225,7 @@ class GoalRepository {
   Future<String> createGoal({
     required String name,
     required int targetMinutes,
-    required int periodDays,
+    required GoalPeriod period,
     int sections = 1,
   }) async {
     final id = _uuid.v4();
@@ -233,7 +233,7 @@ class GoalRepository {
           id: id,
           name: name,
           targetMinutes: targetMinutes,
-          periodDays: periodDays,
+          period: period.name,
           sections: Value(sections),
           startDay: _today,
           createdAtUtc: _nowUtcMs,

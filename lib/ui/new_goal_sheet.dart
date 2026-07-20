@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../data/period.dart';
 import 'format.dart';
 import 'segmented_bar.dart';
 
 class NewGoalResult {
   final String name;
   final int targetMinutes;
-  final int periodDays;
+  final GoalPeriod period;
   final int sections;
 
   const NewGoalResult({
     required this.name,
     required this.targetMinutes,
-    required this.periodDays,
+    required this.period,
     required this.sections,
   });
 }
@@ -40,21 +41,18 @@ class _NewGoalSheet extends StatefulWidget {
 class _NewGoalSheetState extends State<_NewGoalSheet> {
   final _name = TextEditingController();
   final _minutes = TextEditingController(text: '400');
-  final _days = TextEditingController(text: '3');
+  GoalPeriod _period = GoalPeriod.weekly;
   int _sections = 1;
 
   @override
   void dispose() {
     _name.dispose();
     _minutes.dispose();
-    _days.dispose();
     super.dispose();
   }
 
   bool get _valid =>
-      _name.text.trim().isNotEmpty &&
-      (int.tryParse(_minutes.text) ?? 0) > 0 &&
-      (int.tryParse(_days.text) ?? 0) > 0;
+      _name.text.trim().isNotEmpty && (int.tryParse(_minutes.text) ?? 0) > 0;
 
   @override
   Widget build(BuildContext context) {
@@ -83,38 +81,31 @@ class _NewGoalSheetState extends State<_NewGoalSheet> {
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: 14),
+          TextField(
+            controller: _minutes,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: _dec('Minutes'),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _minutes,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: _dec('Minutes'),
-                  onChanged: (_) => setState(() {}),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  'every',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: TextField(
-                  controller: _days,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: _dec('Days'),
-                  onChanged: (_) => setState(() {}),
-                ),
-              ),
+              for (final p in GoalPeriod.values) ...[
+                if (p != GoalPeriod.values.first) const SizedBox(width: 8),
+                _periodChip(p),
+              ],
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 6),
+          Text(
+            _periodHint(_period),
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.4),
+            ),
+          ),
+          const SizedBox(height: 20),
           Row(
             children: [
               Text(
@@ -171,7 +162,7 @@ class _NewGoalSheetState extends State<_NewGoalSheet> {
                         NewGoalResult(
                           name: _name.text.trim(),
                           targetMinutes: int.parse(_minutes.text),
-                          periodDays: int.parse(_days.text),
+                          period: _period,
                           sections: _sections,
                         ),
                       ),
@@ -182,6 +173,38 @@ class _NewGoalSheetState extends State<_NewGoalSheet> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  String _periodHint(GoalPeriod p) => switch (p) {
+        GoalPeriod.daily => 'Resets every midnight.',
+        GoalPeriod.weekly => 'Resets every Monday.',
+        GoalPeriod.biweekly => 'Resets every other Monday.',
+        GoalPeriod.monthly => 'Resets on the 1st of each month.',
+      };
+
+  Widget _periodChip(GoalPeriod p) {
+    final selected = _period == p;
+    return InkWell(
+      onTap: () => setState(() => _period = p),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected
+              ? goalHues.first
+              : Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          p.chipLabel,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.black : Colors.white.withValues(alpha: 0.6),
+          ),
+        ),
       ),
     );
   }

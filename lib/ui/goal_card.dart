@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/goal_repository.dart';
+import '../data/period.dart';
 import 'format.dart';
 import 'segmented_bar.dart';
 
@@ -78,9 +79,8 @@ class GoalCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        '${fmtCompact(p.targetMs)} every '
-                        '${p.goal.periodDays == 1 ? 'day' : '${p.goal.periodDays} days'}'
-                        ' · $daysLeft ${daysLeft == 1 ? 'day' : 'days'} left',
+                        '${fmtCompact(p.targetMs)} ${p.period.label}'
+                        ' · ${p.period == GoalPeriod.daily ? 'today' : '$daysLeft ${daysLeft == 1 ? 'day' : 'days'} left'}',
                         style: TextStyle(
                           fontSize: 12.5,
                           color: Colors.white.withValues(alpha: 0.45),

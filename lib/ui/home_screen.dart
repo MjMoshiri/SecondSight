@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../data/goal_repository.dart';
+import '../widget/widget_sync.dart';
 import 'format.dart';
 import 'goal_card.dart';
 import 'goal_detail_screen.dart';
@@ -46,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
             await widget.repo.createGoal(
               name: result.name,
               targetMinutes: result.targetMinutes,
-              periodDays: result.periodDays,
+              period: result.period,
               sections: result.sections,
             );
           }
@@ -110,27 +111,42 @@ class _HomeScreenState extends State<HomeScreen> {
     final running = goals.where((g) => g.isRunning).length;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          const Text(
-            'SecondSight',
-            style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.8,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'SecondSight',
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.8,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  running > 0
+                      ? '$running ${running == 1 ? 'timer' : 'timers'} running'
+                      : 'Nothing tracking right now',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.45),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            running > 0
-                ? '$running ${running == 1 ? 'timer' : 'timers'} running'
-                : 'Nothing tracking right now',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.45),
+          if (widgetSupported)
+            IconButton(
+              tooltip: 'Add widget to home screen',
+              icon: Icon(
+                Icons.widgets_outlined,
+                color: Colors.white.withValues(alpha: 0.6),
+              ),
+              onPressed: requestPinWidget,
             ),
-          ),
         ],
       ),
     );
@@ -157,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Something like “400 minutes every 3 days”.',
+            'Something like “400 minutes weekly”.',
             style: TextStyle(
               fontSize: 13.5,
               color: Colors.white.withValues(alpha: 0.4),

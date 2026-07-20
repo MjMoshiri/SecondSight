@@ -114,8 +114,8 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${fmtCompact(detail.progress.targetMs)} every '
-                  '${goal.periodDays == 1 ? 'day' : '${goal.periodDays} days'}'
+                  '${fmtCompact(detail.progress.targetMs)} '
+                  '${detail.progress.period.label}'
                   ' · since ${fmtDay(goal.startDay)}',
                   style: TextStyle(
                     fontSize: 13,

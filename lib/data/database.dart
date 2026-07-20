@@ -21,6 +21,9 @@ class AppDatabase extends _$AppDatabase {
 
   static QueryExecutor _open() => driftDatabase(
         name: 'secondsight',
+        // The widget's background isolate writes too; sharing one connection
+        // lets the app's streams see those changes immediately.
+        native: const DriftNativeOptions(shareAcrossIsolates: true),
         web: DriftWebOptions(
           sqlite3Wasm: Uri.parse('sqlite3.wasm'),
           driftWorker: Uri.parse('drift_worker.dart.js'),

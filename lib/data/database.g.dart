@@ -37,15 +37,13 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _periodDaysMeta = const VerificationMeta(
-    'periodDays',
-  );
+  static const VerificationMeta _periodMeta = const VerificationMeta('period');
   @override
-  late final GeneratedColumn<int> periodDays = GeneratedColumn<int>(
-    'period_days',
+  late final GeneratedColumn<String> period = GeneratedColumn<String>(
+    'period',
     aliasedName,
     false,
-    type: DriftSqlType.int,
+    type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
   static const VerificationMeta _sectionsMeta = const VerificationMeta(
@@ -98,7 +96,7 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
     id,
     name,
     targetMinutes,
-    periodDays,
+    period,
     sections,
     startDay,
     createdAtUtc,
@@ -140,13 +138,13 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
     } else if (isInserting) {
       context.missing(_targetMinutesMeta);
     }
-    if (data.containsKey('period_days')) {
+    if (data.containsKey('period')) {
       context.handle(
-        _periodDaysMeta,
-        periodDays.isAcceptableOrUnknown(data['period_days']!, _periodDaysMeta),
+        _periodMeta,
+        period.isAcceptableOrUnknown(data['period']!, _periodMeta),
       );
     } else if (isInserting) {
-      context.missing(_periodDaysMeta);
+      context.missing(_periodMeta);
     }
     if (data.containsKey('sections')) {
       context.handle(
@@ -203,9 +201,9 @@ class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
         DriftSqlType.int,
         data['${effectivePrefix}target_minutes'],
       )!,
-      periodDays: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}period_days'],
+      period: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}period'],
       )!,
       sections: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -236,13 +234,15 @@ class Goal extends DataClass implements Insertable<Goal> {
   final String id;
   final String name;
   final int targetMinutes;
-  final int periodDays;
+
+  /// GoalPeriod name: 'daily' | 'weekly' | 'biweekly' | 'monthly'.
+  final String period;
 
   /// Display only: how many segments the progress bar is drawn with.
   /// Has no effect on tracking or progress math.
   final int sections;
 
-  /// Local day ('yyyy-MM-dd') the first period starts on.
+  /// Local day ('yyyy-MM-dd') the goal was created; bounds period history.
   final String startDay;
   final int createdAtUtc;
   final int? archivedAtUtc;
@@ -250,7 +250,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     required this.id,
     required this.name,
     required this.targetMinutes,
-    required this.periodDays,
+    required this.period,
     required this.sections,
     required this.startDay,
     required this.createdAtUtc,
@@ -262,7 +262,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['target_minutes'] = Variable<int>(targetMinutes);
-    map['period_days'] = Variable<int>(periodDays);
+    map['period'] = Variable<String>(period);
     map['sections'] = Variable<int>(sections);
     map['start_day'] = Variable<String>(startDay);
     map['created_at_utc'] = Variable<int>(createdAtUtc);
@@ -277,7 +277,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       id: Value(id),
       name: Value(name),
       targetMinutes: Value(targetMinutes),
-      periodDays: Value(periodDays),
+      period: Value(period),
       sections: Value(sections),
       startDay: Value(startDay),
       createdAtUtc: Value(createdAtUtc),
@@ -296,7 +296,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       targetMinutes: serializer.fromJson<int>(json['targetMinutes']),
-      periodDays: serializer.fromJson<int>(json['periodDays']),
+      period: serializer.fromJson<String>(json['period']),
       sections: serializer.fromJson<int>(json['sections']),
       startDay: serializer.fromJson<String>(json['startDay']),
       createdAtUtc: serializer.fromJson<int>(json['createdAtUtc']),
@@ -310,7 +310,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'targetMinutes': serializer.toJson<int>(targetMinutes),
-      'periodDays': serializer.toJson<int>(periodDays),
+      'period': serializer.toJson<String>(period),
       'sections': serializer.toJson<int>(sections),
       'startDay': serializer.toJson<String>(startDay),
       'createdAtUtc': serializer.toJson<int>(createdAtUtc),
@@ -322,7 +322,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     String? id,
     String? name,
     int? targetMinutes,
-    int? periodDays,
+    String? period,
     int? sections,
     String? startDay,
     int? createdAtUtc,
@@ -331,7 +331,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     id: id ?? this.id,
     name: name ?? this.name,
     targetMinutes: targetMinutes ?? this.targetMinutes,
-    periodDays: periodDays ?? this.periodDays,
+    period: period ?? this.period,
     sections: sections ?? this.sections,
     startDay: startDay ?? this.startDay,
     createdAtUtc: createdAtUtc ?? this.createdAtUtc,
@@ -346,9 +346,7 @@ class Goal extends DataClass implements Insertable<Goal> {
       targetMinutes: data.targetMinutes.present
           ? data.targetMinutes.value
           : this.targetMinutes,
-      periodDays: data.periodDays.present
-          ? data.periodDays.value
-          : this.periodDays,
+      period: data.period.present ? data.period.value : this.period,
       sections: data.sections.present ? data.sections.value : this.sections,
       startDay: data.startDay.present ? data.startDay.value : this.startDay,
       createdAtUtc: data.createdAtUtc.present
@@ -366,7 +364,7 @@ class Goal extends DataClass implements Insertable<Goal> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('targetMinutes: $targetMinutes, ')
-          ..write('periodDays: $periodDays, ')
+          ..write('period: $period, ')
           ..write('sections: $sections, ')
           ..write('startDay: $startDay, ')
           ..write('createdAtUtc: $createdAtUtc, ')
@@ -380,7 +378,7 @@ class Goal extends DataClass implements Insertable<Goal> {
     id,
     name,
     targetMinutes,
-    periodDays,
+    period,
     sections,
     startDay,
     createdAtUtc,
@@ -393,7 +391,7 @@ class Goal extends DataClass implements Insertable<Goal> {
           other.id == this.id &&
           other.name == this.name &&
           other.targetMinutes == this.targetMinutes &&
-          other.periodDays == this.periodDays &&
+          other.period == this.period &&
           other.sections == this.sections &&
           other.startDay == this.startDay &&
           other.createdAtUtc == this.createdAtUtc &&
@@ -404,7 +402,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
   final Value<String> id;
   final Value<String> name;
   final Value<int> targetMinutes;
-  final Value<int> periodDays;
+  final Value<String> period;
   final Value<int> sections;
   final Value<String> startDay;
   final Value<int> createdAtUtc;
@@ -414,7 +412,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.targetMinutes = const Value.absent(),
-    this.periodDays = const Value.absent(),
+    this.period = const Value.absent(),
     this.sections = const Value.absent(),
     this.startDay = const Value.absent(),
     this.createdAtUtc = const Value.absent(),
@@ -425,7 +423,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     required String id,
     required String name,
     required int targetMinutes,
-    required int periodDays,
+    required String period,
     this.sections = const Value.absent(),
     required String startDay,
     required int createdAtUtc,
@@ -434,14 +432,14 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
   }) : id = Value(id),
        name = Value(name),
        targetMinutes = Value(targetMinutes),
-       periodDays = Value(periodDays),
+       period = Value(period),
        startDay = Value(startDay),
        createdAtUtc = Value(createdAtUtc);
   static Insertable<Goal> custom({
     Expression<String>? id,
     Expression<String>? name,
     Expression<int>? targetMinutes,
-    Expression<int>? periodDays,
+    Expression<String>? period,
     Expression<int>? sections,
     Expression<String>? startDay,
     Expression<int>? createdAtUtc,
@@ -452,7 +450,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (targetMinutes != null) 'target_minutes': targetMinutes,
-      if (periodDays != null) 'period_days': periodDays,
+      if (period != null) 'period': period,
       if (sections != null) 'sections': sections,
       if (startDay != null) 'start_day': startDay,
       if (createdAtUtc != null) 'created_at_utc': createdAtUtc,
@@ -465,7 +463,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     Value<String>? id,
     Value<String>? name,
     Value<int>? targetMinutes,
-    Value<int>? periodDays,
+    Value<String>? period,
     Value<int>? sections,
     Value<String>? startDay,
     Value<int>? createdAtUtc,
@@ -476,7 +474,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
       id: id ?? this.id,
       name: name ?? this.name,
       targetMinutes: targetMinutes ?? this.targetMinutes,
-      periodDays: periodDays ?? this.periodDays,
+      period: period ?? this.period,
       sections: sections ?? this.sections,
       startDay: startDay ?? this.startDay,
       createdAtUtc: createdAtUtc ?? this.createdAtUtc,
@@ -497,8 +495,8 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
     if (targetMinutes.present) {
       map['target_minutes'] = Variable<int>(targetMinutes.value);
     }
-    if (periodDays.present) {
-      map['period_days'] = Variable<int>(periodDays.value);
+    if (period.present) {
+      map['period'] = Variable<String>(period.value);
     }
     if (sections.present) {
       map['sections'] = Variable<int>(sections.value);
@@ -524,7 +522,7 @@ class GoalsCompanion extends UpdateCompanion<Goal> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('targetMinutes: $targetMinutes, ')
-          ..write('periodDays: $periodDays, ')
+          ..write('period: $period, ')
           ..write('sections: $sections, ')
           ..write('startDay: $startDay, ')
           ..write('createdAtUtc: $createdAtUtc, ')
@@ -1326,7 +1324,7 @@ typedef $$GoalsTableCreateCompanionBuilder =
       required String id,
       required String name,
       required int targetMinutes,
-      required int periodDays,
+      required String period,
       Value<int> sections,
       required String startDay,
       required int createdAtUtc,
@@ -1338,7 +1336,7 @@ typedef $$GoalsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> name,
       Value<int> targetMinutes,
-      Value<int> periodDays,
+      Value<String> period,
       Value<int> sections,
       Value<String> startDay,
       Value<int> createdAtUtc,
@@ -1411,8 +1409,8 @@ class $$GoalsTableFilterComposer extends Composer<_$AppDatabase, $GoalsTable> {
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get periodDays => $composableBuilder(
-    column: $table.periodDays,
+  ColumnFilters<String> get period => $composableBuilder(
+    column: $table.period,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1511,8 +1509,8 @@ class $$GoalsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get periodDays => $composableBuilder(
-    column: $table.periodDays,
+  ColumnOrderings<String> get period => $composableBuilder(
+    column: $table.period,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1557,10 +1555,8 @@ class $$GoalsTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<int> get periodDays => $composableBuilder(
-    column: $table.periodDays,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get period =>
+      $composableBuilder(column: $table.period, builder: (column) => column);
 
   GeneratedColumn<int> get sections =>
       $composableBuilder(column: $table.sections, builder: (column) => column);
@@ -1660,7 +1656,7 @@ class $$GoalsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<int> targetMinutes = const Value.absent(),
-                Value<int> periodDays = const Value.absent(),
+                Value<String> period = const Value.absent(),
                 Value<int> sections = const Value.absent(),
                 Value<String> startDay = const Value.absent(),
                 Value<int> createdAtUtc = const Value.absent(),
@@ -1670,7 +1666,7 @@ class $$GoalsTableTableManager
                 id: id,
                 name: name,
                 targetMinutes: targetMinutes,
-                periodDays: periodDays,
+                period: period,
                 sections: sections,
                 startDay: startDay,
                 createdAtUtc: createdAtUtc,
@@ -1682,7 +1678,7 @@ class $$GoalsTableTableManager
                 required String id,
                 required String name,
                 required int targetMinutes,
-                required int periodDays,
+                required String period,
                 Value<int> sections = const Value.absent(),
                 required String startDay,
                 required int createdAtUtc,
@@ -1692,7 +1688,7 @@ class $$GoalsTableTableManager
                 id: id,
                 name: name,
                 targetMinutes: targetMinutes,
-                periodDays: periodDays,
+                period: period,
                 sections: sections,
                 startDay: startDay,
                 createdAtUtc: createdAtUtc,
