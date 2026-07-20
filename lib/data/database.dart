@@ -19,5 +19,11 @@ class AppDatabase extends _$AppDatabase {
         },
       );
 
-  static QueryExecutor _open() => driftDatabase(name: 'secondsight');
+  static QueryExecutor _open() => driftDatabase(
+        name: 'secondsight',
+        web: DriftWebOptions(
+          sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+          driftWorker: Uri.parse('drift_worker.dart.js'),
+        ),
+      );
 }
