@@ -54,6 +54,35 @@ class PeriodStat {
   });
 }
 
+/// Historical performance for one goal, as shown on the report tab.
+class GoalReport {
+  final Goal goal;
+
+  /// Oldest first; the current window is always last.
+  final List<PeriodStat> history;
+
+  final int totalMs;
+  final int last7DaysMs;
+  final int completedPeriods;
+  final int metPeriods;
+  final int currentStreak;
+  final int bestStreak;
+
+  const GoalReport({
+    required this.goal,
+    required this.history,
+    required this.totalMs,
+    required this.last7DaysMs,
+    required this.completedPeriods,
+    required this.metPeriods,
+    required this.currentStreak,
+    required this.bestStreak,
+  });
+
+  int get targetMs => goal.targetMinutes * 60000;
+  GoalPeriod get period => GoalPeriod.values.byName(goal.period);
+}
+
 /// Everything the dashboard shows for one goal.
 class GoalDetail {
   final GoalProgress progress;
@@ -137,6 +166,49 @@ class GoalRepository {
     ];
   }
 
+  /// Past performance of every non-archived goal, newest goal first.
+  /// Re-emits whenever goals or logs change.
+  Stream<List<GoalReport>> watchReport() {
+    final goals = (db.select(db.goals)
+          ..where((g) => g.archivedAtUtc.isNull())
+          ..orderBy([(g) => OrderingTerm.desc(g.createdAtUtc)]))
+        .watch();
+    final logs = db.select(db.timeLogs).watch();
+    return Rx.combineLatest2(goals, logs, _assembleReport);
+  }
+
+  List<GoalReport> _assembleReport(List<Goal> goals, List<TimeLog> logs) {
+    final today = _clock();
+    final weekCutoff = formatDay(today.subtract(const Duration(days: 6)));
+    return [
+      for (final goal in goals)
+        () {
+          final goalLogs = [
+            for (final log in logs)
+              if (log.goalId == goal.id) log,
+          ];
+          final history = _history(goal, goalLogs, today);
+          final (current, best) = _streaks(history);
+          var totalMs = 0, weekMs = 0;
+          for (final log in goalLogs) {
+            totalMs += log.durationMs;
+            if (log.day.compareTo(weekCutoff) >= 0) weekMs += log.durationMs;
+          }
+          final completed = history.length - 1;
+          return GoalReport(
+            goal: goal,
+            history: history,
+            totalMs: totalMs,
+            last7DaysMs: weekMs,
+            completedPeriods: completed,
+            metPeriods: history.take(completed).where((p) => p.met).length,
+            currentStreak: current,
+            bestStreak: best,
+          );
+        }(),
+    ];
+  }
+
   /// Dashboard stream for one goal. Emits null if the goal was deleted.
   Stream<GoalDetail?> watchDetail(String goalId) {
     final goal = (db.select(db.goals)..where((g) => g.id.equals(goalId)))
@@ -156,45 +228,9 @@ class GoalRepository {
     ActiveTimer? timer,
   ) {
     if (goal == null) return null;
-    final today = _clock();
-    final windows = windowsThrough(
-      period: GoalPeriod.values.byName(goal.period),
-      firstDay: goal.startDay,
-      today: today,
-    );
-    final targetMs = goal.targetMinutes * 60000;
-
-    final history = [
-      for (final w in windows)
-        () {
-          var logged = 0;
-          for (final log in logs) {
-            if (log.day.compareTo(w.startDay) >= 0 &&
-                log.day.compareTo(w.endDay) < 0) {
-              logged += log.durationMs;
-            }
-          }
-          return PeriodStat(
-            window: w,
-            loggedMs: logged,
-            met: logged >= targetMs,
-          );
-        }(),
-    ];
-
+    final history = _history(goal, logs, _clock());
+    final (current, best) = _streaks(history);
     final completed = history.length - 1; // all but the current window
-    var best = 0, run = 0;
-    for (var i = 0; i < completed; i++) {
-      run = history[i].met ? run + 1 : 0;
-      if (run > best) best = run;
-    }
-    var current = 0;
-    for (var i = completed - 1; i >= 0; i--) {
-      if (!history[i].met) break;
-      current++;
-    }
-    if (history.isNotEmpty && history.last.met) current++;
-    if (current > best) best = current;
 
     var totalMs = 0;
     for (final log in logs) {
@@ -220,6 +256,53 @@ class GoalRepository {
       currentStreak: current,
       bestStreak: best,
     );
+  }
+
+  /// Per-window stats for [goal] from its creation window through today.
+  /// [logs] must already be filtered to this goal.
+  List<PeriodStat> _history(Goal goal, List<TimeLog> logs, DateTime today) {
+    final windows = windowsThrough(
+      period: GoalPeriod.values.byName(goal.period),
+      firstDay: goal.startDay,
+      today: today,
+    );
+    final targetMs = goal.targetMinutes * 60000;
+    return [
+      for (final w in windows)
+        () {
+          var logged = 0;
+          for (final log in logs) {
+            if (log.day.compareTo(w.startDay) >= 0 &&
+                log.day.compareTo(w.endDay) < 0) {
+              logged += log.durationMs;
+            }
+          }
+          return PeriodStat(
+            window: w,
+            loggedMs: logged,
+            met: logged >= targetMs,
+          );
+        }(),
+    ];
+  }
+
+  /// (current, best) streak of met periods. The in-progress window only
+  /// counts toward the current streak once it's already met.
+  (int, int) _streaks(List<PeriodStat> history) {
+    final completed = history.length - 1;
+    var best = 0, run = 0;
+    for (var i = 0; i < completed; i++) {
+      run = history[i].met ? run + 1 : 0;
+      if (run > best) best = run;
+    }
+    var current = 0;
+    for (var i = completed - 1; i >= 0; i--) {
+      if (!history[i].met) break;
+      current++;
+    }
+    if (history.isNotEmpty && history.last.met) current++;
+    if (current > best) best = current;
+    return (current, best);
   }
 
   Future<String> createGoal({

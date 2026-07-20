@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:secondsight/data/database.dart';
@@ -93,6 +94,37 @@ void main() {
     await repo.start(id);
     await repo.stop(id);
     expect(await db.select(db.timeLogs).get(), isEmpty);
+  });
+
+  test('watchReport aggregates history, streaks, and week total', () async {
+    // Created on Sunday Jul 19; backdate creation to get past windows.
+    final id = await repo.createGoal(
+        name: 'Read', targetMinutes: 10, period: GoalPeriod.daily);
+    await (db.update(db.goals)..where((g) => g.id.equals(id)))
+        .write(const GoalsCompanion(startDay: Value('2026-07-16')));
+
+    Future<void> log(Duration d) async {
+      await repo.start(id);
+      now = now.add(d);
+      await repo.stop(id);
+    }
+
+    // Jul 16 met, Jul 17 missed, Jul 18 met, Jul 19 (today) met.
+    now = DateTime(2026, 7, 16, 9);
+    await log(const Duration(minutes: 12));
+    now = DateTime(2026, 7, 18, 9);
+    await log(const Duration(minutes: 10));
+    now = DateTime(2026, 7, 19, 9);
+    await log(const Duration(minutes: 15));
+
+    final report = (await repo.watchReport().first).single;
+    expect(report.history.map((h) => h.met), [true, false, true, true]);
+    expect(report.completedPeriods, 3);
+    expect(report.metPeriods, 2);
+    expect(report.currentStreak, 2); // Jul 18 + today
+    expect(report.bestStreak, 2);
+    expect(report.totalMs, 37 * 60000);
+    expect(report.last7DaysMs, 37 * 60000);
   });
 
   test('deleteGoal removes goal, logs, and timer', () async {

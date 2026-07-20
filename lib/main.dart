@@ -5,7 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'data/database.dart';
 import 'data/goal_repository.dart';
-import 'ui/home_screen.dart';
+import 'ui/app_shell.dart';
 import 'widget/timer_notification.dart';
 import 'widget/widget_sync.dart';
 
@@ -44,7 +44,7 @@ class SecondSightApp extends StatelessWidget {
           brightness: Brightness.dark,
         ),
       ),
-      home: HomeScreen(repo: repo),
+      home: AppShell(repo: repo),
     );
   }
 }
