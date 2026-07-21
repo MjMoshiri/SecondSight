@@ -6,18 +6,20 @@ import 'package:secondsight/ui/session_sheet.dart';
 void main() {
   testWidgets('adding a session returns day + minutes', (tester) async {
     SessionSheetResult? result;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: Builder(
-          builder: (context) => ElevatedButton(
-            onPressed: () async {
-              result = await showSessionSheet(context);
-            },
-            child: const Text('open'),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () async {
+                result = await showSessionSheet(context);
+              },
+              child: const Text('open'),
+            ),
           ),
         ),
       ),
-    ));
+    );
 
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
@@ -25,8 +27,10 @@ void main() {
     expect(find.text('Delete'), findsNothing); // no delete when adding
 
     // Save is disabled until minutes are entered.
-    expect(tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-        isNull);
+    expect(
+      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      isNull,
+    );
 
     await tester.enterText(find.byType(TextField), '25');
     await tester.pumpAndSettle();
@@ -38,8 +42,9 @@ void main() {
     expect(result!.durationMinutes, 25);
   });
 
-  testWidgets('editing shows existing values and a delete action',
-      (tester) async {
+  testWidgets('editing shows existing values and a delete action', (
+    tester,
+  ) async {
     final existing = TimeLog(
       id: 'log-1',
       goalId: 'goal-1',
@@ -48,18 +53,20 @@ void main() {
       createdAtUtc: 0,
     );
     SessionSheetResult? result;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: Builder(
-          builder: (context) => ElevatedButton(
-            onPressed: () async {
-              result = await showSessionSheet(context, existing: existing);
-            },
-            child: const Text('open'),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () async {
+                result = await showSessionSheet(context, existing: existing);
+              },
+              child: const Text('open'),
+            ),
           ),
         ),
       ),
-    ));
+    );
 
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
@@ -75,8 +82,9 @@ void main() {
     expect(result!.durationMinutes, 55);
   });
 
-  testWidgets('delete asks for confirmation, then returns a delete result',
-      (tester) async {
+  testWidgets('delete asks for confirmation, then returns a delete result', (
+    tester,
+  ) async {
     final existing = TimeLog(
       id: 'log-1',
       goalId: 'goal-1',
@@ -85,18 +93,20 @@ void main() {
       createdAtUtc: 0,
     );
     SessionSheetResult? result;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: Builder(
-          builder: (context) => ElevatedButton(
-            onPressed: () async {
-              result = await showSessionSheet(context, existing: existing);
-            },
-            child: const Text('open'),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () async {
+                result = await showSessionSheet(context, existing: existing);
+              },
+              child: const Text('open'),
+            ),
           ),
         ),
       ),
-    ));
+    );
 
     final sheetDeleteButton = find.widgetWithText(OutlinedButton, 'Delete');
     final dialogDeleteButton = find.widgetWithText(TextButton, 'Delete');

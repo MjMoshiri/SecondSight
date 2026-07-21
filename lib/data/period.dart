@@ -16,19 +16,19 @@ enum GoalPeriod {
 
   /// Inline label: '2h daily', '6h every 2 weeks'.
   String get label => switch (this) {
-        daily => 'daily',
-        weekly => 'weekly',
-        biweekly => 'every 2 weeks',
-        monthly => 'monthly',
-      };
+    daily => 'daily',
+    weekly => 'weekly',
+    biweekly => 'every 2 weeks',
+    monthly => 'monthly',
+  };
 
   /// Short label for selection chips.
   String get chipLabel => switch (this) {
-        daily => 'Daily',
-        weekly => 'Weekly',
-        biweekly => '2 weeks',
-        monthly => 'Monthly',
-      };
+    daily => 'Daily',
+    weekly => 'Weekly',
+    biweekly => '2 weeks',
+    monthly => 'Monthly',
+  };
 }
 
 String formatDay(DateTime local) {
@@ -67,14 +67,14 @@ class PeriodWindow {
 
 /// First day of the window containing [day].
 DateTime _windowStart(GoalPeriod period, DateTime day) => switch (period) {
-      GoalPeriod.daily => day,
-      GoalPeriod.weekly => day.subtract(Duration(days: day.weekday - 1)),
-      GoalPeriod.biweekly => () {
-          final days = day.difference(_biweeklyAnchor).inDays;
-          return _biweeklyAnchor.add(Duration(days: (days ~/ 14) * 14));
-        }(),
-      GoalPeriod.monthly => DateTime.utc(day.year, day.month, 1),
-    };
+  GoalPeriod.daily => day,
+  GoalPeriod.weekly => day.subtract(Duration(days: day.weekday - 1)),
+  GoalPeriod.biweekly => () {
+    final days = day.difference(_biweeklyAnchor).inDays;
+    return _biweeklyAnchor.add(Duration(days: (days ~/ 14) * 14));
+  }(),
+  GoalPeriod.monthly => DateTime.utc(day.year, day.month, 1),
+};
 
 /// First day of the window after the one starting at [windowStart].
 DateTime _nextWindowStart(GoalPeriod period, DateTime windowStart) =>
@@ -82,8 +82,11 @@ DateTime _nextWindowStart(GoalPeriod period, DateTime windowStart) =>
       GoalPeriod.daily => windowStart.add(const Duration(days: 1)),
       GoalPeriod.weekly => windowStart.add(const Duration(days: 7)),
       GoalPeriod.biweekly => windowStart.add(const Duration(days: 14)),
-      GoalPeriod.monthly =>
-        DateTime.utc(windowStart.year, windowStart.month + 1, 1),
+      GoalPeriod.monthly => DateTime.utc(
+        windowStart.year,
+        windowStart.month + 1,
+        1,
+      ),
     };
 
 PeriodWindow _window(GoalPeriod period, DateTime start, DateTime? today) {
@@ -120,15 +123,17 @@ List<PeriodWindow> windowsThrough({
   if (first.isAfter(currentStart)) first = currentStart;
 
   final starts = <DateTime>[];
-  for (var s = first;
-      !s.isAfter(currentStart);
-      s = _nextWindowStart(period, s)) {
+  for (
+    var s = first;
+    !s.isAfter(currentStart);
+    s = _nextWindowStart(period, s)
+  ) {
     starts.add(s);
   }
-  final visible =
-      starts.length <= limit ? starts : starts.sublist(starts.length - limit);
+  final visible = starts.length <= limit
+      ? starts
+      : starts.sublist(starts.length - limit);
   return [
-    for (final s in visible)
-      _window(period, s, s == currentStart ? day : null),
+    for (final s in visible) _window(period, s, s == currentStart ? day : null),
   ];
 }

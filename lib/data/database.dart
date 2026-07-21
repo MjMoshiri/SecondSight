@@ -10,23 +10,28 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _open());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        beforeOpen: (details) async {
-          await customStatement('PRAGMA foreign_keys = ON');
-        },
-      );
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(goals, goals.goalType);
+      }
+    },
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+    },
+  );
 
   static QueryExecutor _open() => driftDatabase(
-        name: 'secondsight',
-        // The widget's background isolate writes too; sharing one connection
-        // lets the app's streams see those changes immediately.
-        native: const DriftNativeOptions(shareAcrossIsolates: true),
-        web: DriftWebOptions(
-          sqlite3Wasm: Uri.parse('sqlite3.wasm'),
-          driftWorker: Uri.parse('drift_worker.dart.js'),
-        ),
-      );
+    name: 'secondsight',
+    // The widget's background isolate writes too; sharing one connection
+    // lets the app's streams see those changes immediately.
+    native: const DriftNativeOptions(shareAcrossIsolates: true),
+    web: DriftWebOptions(
+      sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+      driftWorker: Uri.parse('drift_worker.dart.js'),
+    ),
+  );
 }

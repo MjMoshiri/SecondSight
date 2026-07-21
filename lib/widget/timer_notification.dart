@@ -7,7 +7,8 @@ import '../ui/format.dart';
 final _plugin = FlutterLocalNotificationsPlugin();
 bool _initialized = false;
 
-bool get _supported => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+bool get _supported =>
+    !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
 Future<void> _ensureInit() async {
   if (_initialized) return;
@@ -55,7 +56,7 @@ Future<void> syncTimerNotifications(List<GoalProgress> goals) async {
     final body = p.isRunning
         ? '${fmtCompact(p.elapsedMs(now))} of ${fmtCompact(p.targetMs)}'
         : 'Paused at ${fmtTicking(p.timerElapsedMs(now))} · '
-            '${fmtCompact(p.elapsedMs(now))} of ${fmtCompact(p.targetMs)}';
+              '${fmtCompact(p.elapsedMs(now))} of ${fmtCompact(p.targetMs)}';
     await _plugin.show(
       id,
       p.goal.name,

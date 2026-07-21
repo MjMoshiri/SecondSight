@@ -257,7 +257,11 @@ class _GoalReportCard extends StatelessWidget {
                       : 'best streak ${report.bestStreak}',
                 ),
                 const Spacer(),
-                _footNote('${fmtCompact(report.totalMs)} total'),
+                _footNote(
+                  report.isCount
+                      ? '${report.totalCount} check-ins total'
+                      : '${fmtCompact(report.totalMs)} total',
+                ),
               ],
             ),
           ],
@@ -270,8 +274,13 @@ class _GoalReportCard extends StatelessWidget {
       TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.35));
 
   Widget _cell(PeriodStat stat, Color color, {required bool isCurrent}) {
-    final target = report.targetMs;
-    final ratio = target == 0 ? 0.0 : (stat.loggedMs / target).clamp(0.0, 1.0);
+    final ratio = report.isCount
+        ? (report.targetCount == 0
+              ? 0.0
+              : (stat.count / report.targetCount).clamp(0.0, 1.0))
+        : (report.targetMs == 0
+              ? 0.0
+              : (stat.loggedMs / report.targetMs).clamp(0.0, 1.0));
     final cellColor = stat.met
         ? color
         : isCurrent

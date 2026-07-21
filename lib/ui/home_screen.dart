@@ -49,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
               targetMinutes: result.targetMinutes,
               period: result.period,
               sections: result.sections,
+              type: result.type,
             );
           }
         },
@@ -69,10 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
               slivers: [
                 SliverToBoxAdapter(child: _header(goals, nowUtcMs)),
                 if (snapshot.hasData && goals.isEmpty)
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _empty(),
-                  )
+                  SliverFillRemaining(hasScrollBody: false, child: _empty())
                 else
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
@@ -86,6 +84,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         onPause: () => widget.repo.pause(goals[i].goal.id),
                         onResume: () => widget.repo.resume(goals[i].goal.id),
                         onStop: () => widget.repo.stop(goals[i].goal.id),
+                        onCheck: () => _check(goals[i]),
                         onDelete: () => _confirmDelete(goals[i]),
                         onTap: () => Navigator.push(
                           context,
@@ -173,7 +172,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Something like “400 minutes weekly”.',
+            'Something like “400 minutes weekly”\nor “gym 3 times a week”.',
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13.5,
               color: Colors.white.withValues(alpha: 0.4),
@@ -182,6 +182,31 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  /// One tap = one check-in, with a snackbar undo for slips.
+  Future<void> _check(GoalProgress p) async {
+    final logId = await widget.repo.check(p.goal.id);
+    if (!mounted) return;
+    final done = p.checksInWindow + 1 >= p.targetCount;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            done
+                ? '${p.goal.name}: ${p.checksInWindow + 1} of '
+                      '${p.targetCount} — done for this period 🎉'
+                : '${p.goal.name}: ${p.checksInWindow + 1} of '
+                      '${p.targetCount}',
+          ),
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () => widget.repo.deleteLog(logId),
+          ),
+        ),
+      );
   }
 
   Future<void> _confirmDelete(GoalProgress p) async {

@@ -49,13 +49,16 @@ Future<void> syncWidget(List<GoalProgress> goals) async {
     entries.add({
       'id': p.goal.id,
       'name': p.goal.name,
-      'status': p.isPaused
+      'status': p.isCount
+          ? '${p.checksInWindow} of ${p.targetCount} · ${daysLeft}d left'
+          : p.isPaused
           ? 'Paused ${fmtTicking(p.timerElapsedMs(now))} · '
-              '${fmtCompact(p.elapsedMs(now))} of ${fmtCompact(p.targetMs)}'
+                '${fmtCompact(p.elapsedMs(now))} of ${fmtCompact(p.targetMs)}'
           : '${fmtCompact(p.elapsedMs(now))} of '
-              '${fmtCompact(p.targetMs)} · ${daysLeft}d left',
+                '${fmtCompact(p.targetMs)} · ${daysLeft}d left',
       'running': p.isRunning,
       'paused': p.isPaused,
+      'check': p.isCount,
       'elapsedMs': p.timerElapsedMs(now),
       'writtenAtUtc': now,
       'bar': barPath,
@@ -87,9 +90,21 @@ Future<void> widgetInteractivityCallback(Uri? uri) async {
   final db = AppDatabase();
   try {
     final repo = GoalRepository(db);
+    final goal = await (db.select(
+      db.goals,
+    )..where((g) => g.id.equals(goalId))).getSingleOrNull();
+    // Stale widgets may still send 'start' for a goal that is now a count
+    // goal; treat it as a check-in rather than starting a timer.
+    final isCount = goal?.goalType == 'count';
     switch (action) {
+      case 'check':
+        await repo.check(goalId);
       case 'start':
-        await repo.start(goalId);
+        if (isCount) {
+          await repo.check(goalId);
+        } else {
+          await repo.start(goalId);
+        }
       case 'pause':
         await repo.pause(goalId);
       case 'resume':

@@ -59,8 +59,11 @@ void main() {
       firstDay: '2026-07-05', // a Sunday, inside the week of Jun 29
       today: sunday,
     );
-    expect(windows.map((w) => w.startDay),
-        ['2026-06-29', '2026-07-06', '2026-07-13']);
+    expect(windows.map((w) => w.startDay), [
+      '2026-06-29',
+      '2026-07-06',
+      '2026-07-13',
+    ]);
     expect(windows.take(2).map((w) => w.daysLeft), [0, 0]);
     expect(windows.last.daysLeft, 1);
   });
@@ -71,10 +74,16 @@ void main() {
       firstDay: '2026-05-20',
       today: sunday,
     );
-    expect(windows.map((w) => w.startDay),
-        ['2026-05-01', '2026-06-01', '2026-07-01']);
-    expect(windows.map((w) => w.endDay),
-        ['2026-06-01', '2026-07-01', '2026-08-01']);
+    expect(windows.map((w) => w.startDay), [
+      '2026-05-01',
+      '2026-06-01',
+      '2026-07-01',
+    ]);
+    expect(windows.map((w) => w.endDay), [
+      '2026-06-01',
+      '2026-07-01',
+      '2026-08-01',
+    ]);
   });
 
   test('windowsThrough caps at the limit most recent windows', () {

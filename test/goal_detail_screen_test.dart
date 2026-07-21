@@ -20,17 +20,26 @@ void main() {
     late final String id;
     await tester.runAsync(() async {
       id = await repo.createGoal(
-          name: 'Read', targetMinutes: 60, period: GoalPeriod.daily);
+        name: 'Read',
+        targetMinutes: 60,
+        period: GoalPeriod.daily,
+      );
       await repo.addManualLog(
-          goalId: id, day: '2026-07-21', durationMinutes: 30);
+        goalId: id,
+        day: '2026-07-21',
+        durationMinutes: 30,
+      );
     });
 
     await tester.pumpWidget(
-      MaterialApp(home: GoalDetailScreen(repo: repo, goalId: id)),
+      MaterialApp(
+        home: GoalDetailScreen(repo: repo, goalId: id),
+      ),
     );
     // Let the watchDetail stream deliver its first event, then rebuild.
     await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 100)));
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400)); // bar animation
 

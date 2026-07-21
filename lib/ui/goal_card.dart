@@ -12,6 +12,7 @@ class GoalCard extends StatelessWidget {
   final VoidCallback onPause;
   final VoidCallback onResume;
   final VoidCallback onStop;
+  final VoidCallback onCheck;
   final VoidCallback onDelete;
   final VoidCallback onTap;
 
@@ -23,6 +24,7 @@ class GoalCard extends StatelessWidget {
     required this.onPause,
     required this.onResume,
     required this.onStop,
+    required this.onCheck,
     required this.onDelete,
     required this.onTap,
   });
@@ -79,7 +81,7 @@ class GoalCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        '${fmtCompact(p.targetMs)} ${p.period.label}'
+                        '${p.isCount ? '${p.targetCount}×' : fmtCompact(p.targetMs)} ${p.period.label}'
                         ' · ${p.period == GoalPeriod.daily ? 'today' : '$daysLeft ${daysLeft == 1 ? 'day' : 'days'} left'}',
                         style: TextStyle(
                           fontSize: 12.5,
@@ -113,7 +115,10 @@ class GoalCard extends StatelessWidget {
                   const SizedBox(width: 8),
                 ],
                 Text(
-                  '${fmtCompact(elapsed)} of ${fmtCompact(p.targetMs)}',
+                  p.isCount
+                      ? '${p.checksInWindow} of ${p.targetCount} '
+                            '${p.targetCount == 1 ? 'time' : 'times'}'
+                      : '${fmtCompact(elapsed)} of ${fmtCompact(p.targetMs)}',
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.white.withValues(alpha: 0.5),
@@ -132,11 +137,7 @@ class GoalCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            SegmentedBar(
-              ratio: ratio,
-              sections: p.goal.sections,
-              color: color,
-            ),
+            SegmentedBar(ratio: ratio, sections: p.goal.sections, color: color),
           ],
         ),
       ),
@@ -145,6 +146,14 @@ class GoalCard extends StatelessWidget {
 
   Widget _controls(Color color) {
     final p = progress;
+    if (p.isCount) {
+      return _roundButton(
+        icon: Icons.check_rounded,
+        color: color,
+        filled: true,
+        onTap: onCheck,
+      );
+    }
     if (p.timer == null) {
       return _roundButton(
         icon: Icons.play_arrow_rounded,

@@ -56,41 +56,51 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                 SliverToBoxAdapter(child: _header(detail)),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 48),
-                  sliver: SliverList.list(children: [
-                    _currentPeriod(detail, color, nowUtcMs),
-                    const SizedBox(height: 24),
-                    _stats(detail, color),
-                    const SizedBox(height: 28),
-                    _sectionTitle('History'),
-                    const SizedBox(height: 12),
-                    _historyChart(detail, color),
-                    const SizedBox(height: 28),
-                    Row(
-                      children: [
-                        Expanded(child: _sectionTitle('Recent sessions')),
-                        IconButton(
-                          icon: const Icon(Icons.add_rounded),
-                          tooltip: 'Add session',
-                          onPressed: () =>
-                              _addSession(detail.progress.goal.id),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    if (detail.recentLogs.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          'Nothing logged yet.',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            color: Colors.white.withValues(alpha: 0.4),
+                  sliver: SliverList.list(
+                    children: [
+                      _currentPeriod(detail, color, nowUtcMs),
+                      const SizedBox(height: 24),
+                      _stats(detail, color),
+                      const SizedBox(height: 28),
+                      _sectionTitle('History'),
+                      const SizedBox(height: 12),
+                      _historyChart(detail, color),
+                      const SizedBox(height: 28),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _sectionTitle(
+                              detail.progress.isCount
+                                  ? 'Check-ins'
+                                  : 'Recent sessions',
+                            ),
                           ),
-                        ),
-                      )
-                    else
-                      for (final log in detail.recentLogs) _logRow(log, color),
-                  ]),
+                          IconButton(
+                            icon: const Icon(Icons.add_rounded),
+                            tooltip: detail.progress.isCount
+                                ? 'Add check-in'
+                                : 'Add session',
+                            onPressed: () => _addSession(detail.progress),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      if (detail.recentLogs.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Text(
+                            'Nothing logged yet.',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              color: Colors.white.withValues(alpha: 0.4),
+                            ),
+                          ),
+                        )
+                      else
+                        for (final log in detail.recentLogs)
+                          _logRow(log, color, detail.progress.isCount),
+                    ],
+                  ),
                 ),
               ],
             );
@@ -125,7 +135,7 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${fmtCompact(detail.progress.targetMs)} '
+                  '${detail.progress.isCount ? '${detail.progress.targetCount}×' : fmtCompact(detail.progress.targetMs)} '
                   '${detail.progress.period.label}'
                   ' · since ${fmtDay(goal.startDay)}',
                   style: TextStyle(
@@ -179,7 +189,9 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                fmtCompact(p.elapsedMs(nowUtcMs)),
+                p.isCount
+                    ? '${p.checksInWindow}'
+                    : fmtCompact(p.elapsedMs(nowUtcMs)),
                 style: TextStyle(
                   fontSize: 34,
                   fontWeight: FontWeight.w800,
@@ -192,7 +204,10 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 3),
                 child: Text(
-                  'of ${fmtCompact(p.targetMs)}',
+                  p.isCount
+                      ? 'of ${p.targetCount} '
+                            '${p.targetCount == 1 ? 'time' : 'times'}'
+                      : 'of ${fmtCompact(p.targetMs)}',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.45),
@@ -225,14 +240,21 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
     final rate = detail.completedPeriods == 0
         ? '—'
         : '${(detail.metPeriods / detail.completedPeriods * 100).round()}%';
+    final isCount = detail.progress.isCount;
     return Row(
       children: [
-        _tile('Total tracked', fmtCompact(detail.totalMs)),
+        if (isCount)
+          _tile('Check-ins', '${detail.totalCount}×')
+        else
+          _tile('Total tracked', fmtCompact(detail.totalMs)),
         const SizedBox(width: 10),
         _tile('Hit rate', rate),
         const SizedBox(width: 10),
-        _tile('Streak', '${detail.currentStreak}',
-            accent: detail.currentStreak > 0 ? color : null),
+        _tile(
+          'Streak',
+          '${detail.currentStreak}',
+          accent: detail.currentStreak > 0 ? color : null,
+        ),
         const SizedBox(width: 10),
         _tile('Best', '${detail.bestStreak}'),
       ],
@@ -273,16 +295,25 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
   }
 
   Widget _sectionTitle(String text) => Text(
-        text,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
-        ),
-      );
+    text,
+    style: const TextStyle(
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+      letterSpacing: -0.2,
+    ),
+  );
 
   Widget _historyChart(GoalDetail detail, Color color) {
-    final target = detail.progress.targetMs;
+    final p = detail.progress;
+    double fill(PeriodStat stat) {
+      if (p.isCount) {
+        return p.targetCount == 0
+            ? 0
+            : (stat.count / p.targetCount).clamp(0.0, 1.0);
+      }
+      return p.targetMs == 0 ? 0 : (stat.loggedMs / p.targetMs).clamp(0.0, 1.0);
+    }
+
     final bars = detail.history;
     const chartHeight = 120.0;
     return Container(
@@ -301,8 +332,14 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
               children: [
                 for (var i = 0; i < bars.length; i++) ...[
                   if (i > 0) const SizedBox(width: 4),
-                  Expanded(child: _bar(bars[i], target, color,
-                      isCurrent: i == bars.length - 1)),
+                  Expanded(
+                    child: _bar(
+                      bars[i],
+                      fill(bars[i]),
+                      color,
+                      isCurrent: i == bars.length - 1,
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -332,15 +369,17 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
     );
   }
 
-  Widget _bar(PeriodStat stat, int targetMs, Color color,
-      {required bool isCurrent}) {
-    final ratio =
-        targetMs == 0 ? 0.0 : (stat.loggedMs / targetMs).clamp(0.0, 1.0);
+  Widget _bar(
+    PeriodStat stat,
+    double ratio,
+    Color color, {
+    required bool isCurrent,
+  }) {
     final barColor = stat.met
         ? color
         : isCurrent
-            ? color.withValues(alpha: 0.45)
-            : Colors.white.withValues(alpha: 0.18);
+        ? color.withValues(alpha: 0.45)
+        : Colors.white.withValues(alpha: 0.18);
     return AnimatedFractionallySizedBox(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeOutCubic,
@@ -356,9 +395,9 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
     );
   }
 
-  Widget _logRow(TimeLog log, Color color) {
+  Widget _logRow(TimeLog log, Color color, bool isCount) {
     return InkWell(
-      onTap: () => _editSession(log),
+      onTap: () => _editSession(log, isCount),
       borderRadius: BorderRadius.circular(10),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 9),
@@ -381,11 +420,20 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
               ),
             ),
             const Spacer(),
-            Text(
-              fmtCompact(log.durationMs),
-              style:
-                  const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
+            if (isCount)
+              Icon(
+                Icons.check_rounded,
+                size: 18,
+                color: color.withValues(alpha: 0.8),
+              )
+            else
+              Text(
+                fmtCompact(log.durationMs),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             const SizedBox(width: 6),
             Icon(
               Icons.chevron_right_rounded,
@@ -398,18 +446,22 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
     );
   }
 
-  Future<void> _addSession(String goalId) async {
-    final result = await showSessionSheet(context);
+  Future<void> _addSession(GoalProgress p) async {
+    final result = await showSessionSheet(context, countGoal: p.isCount);
     if (result == null || result.delete) return;
     await widget.repo.addManualLog(
-      goalId: goalId,
+      goalId: p.goal.id,
       day: result.day,
       durationMinutes: result.durationMinutes,
     );
   }
 
-  Future<void> _editSession(TimeLog log) async {
-    final result = await showSessionSheet(context, existing: log);
+  Future<void> _editSession(TimeLog log, bool isCount) async {
+    final result = await showSessionSheet(
+      context,
+      existing: log,
+      countGoal: isCount,
+    );
     if (result == null) return;
     if (result.delete) {
       await widget.repo.deleteLog(log.id);

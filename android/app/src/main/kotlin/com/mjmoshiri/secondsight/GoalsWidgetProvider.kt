@@ -91,6 +91,13 @@ class GoalsWidgetProvider : HomeWidgetProvider() {
 
         val toggleId = id(context, "goal_toggle_$i")
         val stopId = id(context, "goal_stop_$i")
+        if (goal.optBoolean("check", false)) {
+            // Count goal: the one button logs a check-in, no timer controls.
+            views.setImageViewResource(toggleId, R.drawable.ic_widget_check)
+            views.setOnClickPendingIntent(toggleId, actionIntent(context, "check", goalId))
+            views.setViewVisibility(stopId, View.GONE)
+            return
+        }
         val toggleAction = if (running) "pause" else if (paused) "resume" else "start"
         views.setImageViewResource(
             toggleId,

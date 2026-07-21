@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
-/// A goal is a portion of time per calendar period, e.g. 400 minutes weekly.
+/// A goal is a target per calendar period: either a portion of time
+/// (400 minutes weekly) or a number of check-ins (gym 3 times a week).
 ///
 /// Period windows are derived, never stored — they align to the calendar
 /// (daily = midnight, weekly/biweekly = Mondays, monthly = the 1st), so
@@ -8,7 +9,13 @@ import 'package:drift/drift.dart';
 class Goals extends Table {
   TextColumn get id => text()(); // uuid
   TextColumn get name => text()();
+
+  /// The per-period target. Minutes for 'time' goals; number of check-ins
+  /// for 'count' goals.
   IntColumn get targetMinutes => integer()();
+
+  /// GoalType name: 'time' | 'count'.
+  TextColumn get goalType => text().withDefault(const Constant('time'))();
 
   /// GoalPeriod name: 'daily' | 'weekly' | 'biweekly' | 'monthly'.
   TextColumn get period => text()();
@@ -30,6 +37,9 @@ class Goals extends Table {
 /// A finished chunk of tracked time — written when a timer stops, or
 /// entered/edited manually. Progress is always the sum of logs in a period
 /// window.
+///
+/// For count goals each row is one check-in with durationMs 0; progress is
+/// the number of rows in the window instead of their summed duration.
 @TableIndex(name: 'time_logs_goal_day', columns: {#goalId, #day})
 class TimeLogs extends Table {
   TextColumn get id => text()(); // uuid

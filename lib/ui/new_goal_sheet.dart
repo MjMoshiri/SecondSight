@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../data/goal_type.dart';
 import '../data/period.dart';
 import 'format.dart';
 import 'segmented_bar.dart';
 
 class NewGoalResult {
   final String name;
+
+  /// Minutes for time goals; number of check-ins for count goals.
   final int targetMinutes;
   final GoalPeriod period;
   final int sections;
+  final GoalType type;
 
   const NewGoalResult({
     required this.name,
     required this.targetMinutes,
     required this.period,
     required this.sections,
+    required this.type,
   });
 }
 
@@ -41,6 +46,8 @@ class _NewGoalSheet extends StatefulWidget {
 class _NewGoalSheetState extends State<_NewGoalSheet> {
   final _name = TextEditingController();
   final _minutes = TextEditingController(text: '400');
+  final _times = TextEditingController(text: '3');
+  GoalType _type = GoalType.time;
   GoalPeriod _period = GoalPeriod.weekly;
   int _sections = 1;
 
@@ -48,11 +55,15 @@ class _NewGoalSheetState extends State<_NewGoalSheet> {
   void dispose() {
     _name.dispose();
     _minutes.dispose();
+    _times.dispose();
     super.dispose();
   }
 
-  bool get _valid =>
-      _name.text.trim().isNotEmpty && (int.tryParse(_minutes.text) ?? 0) > 0;
+  bool get _isCount => _type == GoalType.count;
+
+  int get _target => int.tryParse(_isCount ? _times.text : _minutes.text) ?? 0;
+
+  bool get _valid => _name.text.trim().isNotEmpty && _target > 0;
 
   @override
   Widget build(BuildContext context) {
@@ -77,17 +88,52 @@ class _NewGoalSheetState extends State<_NewGoalSheet> {
             controller: _name,
             autofocus: true,
             textCapitalization: TextCapitalization.sentences,
-            decoration: _dec('Name', hint: 'Deep work'),
+            decoration: _dec('Name', hint: _isCount ? 'Gym' : 'Deep work'),
             onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _chip(
+                'Time',
+                selected: !_isCount,
+                onTap: () => setState(() => _type = GoalType.time),
+              ),
+              const SizedBox(width: 8),
+              _chip(
+                'Check-ins',
+                selected: _isCount,
+                onTap: () => setState(() => _type = GoalType.count),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _isCount
+                ? 'Do it a number of times per period — one tap per check-in.'
+                : 'Log minutes with timers or manual sessions.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.4),
+            ),
           ),
           const SizedBox(height: 14),
-          TextField(
-            controller: _minutes,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            decoration: _dec('Minutes'),
-            onChanged: (_) => setState(() {}),
-          ),
+          if (_isCount)
+            TextField(
+              controller: _times,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: _dec('Times', hint: '3'),
+              onChanged: (_) => setState(() {}),
+            )
+          else
+            TextField(
+              controller: _minutes,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: _dec('Minutes'),
+              onChanged: (_) => setState(() {}),
+            ),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -105,44 +151,47 @@ class _NewGoalSheetState extends State<_NewGoalSheet> {
               color: Colors.white.withValues(alpha: 0.4),
             ),
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Text(
-                'Sections',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.7),
+          if (!_isCount) ...[
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Text(
+                  'Sections',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.7),
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Text(
-                '$_sections',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: accent,
+                const Spacer(),
+                Text(
+                  '$_sections',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: accent,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          Slider(
-            value: _sections.toDouble(),
-            min: 1,
-            max: 10,
-            divisions: 9,
-            activeColor: accent,
-            onChanged: (v) => setState(() => _sections = v.round()),
-          ),
-          SegmentedBar(ratio: 0.62, sections: _sections, color: accent),
-          const SizedBox(height: 6),
-          Text(
-            'Just visual — splits the bar so partial progress is easier to read.',
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white.withValues(alpha: 0.4),
+              ],
             ),
-          ),
+            Slider(
+              value: _sections.toDouble(),
+              min: 1,
+              max: 10,
+              divisions: 9,
+              activeColor: accent,
+              onChanged: (v) => setState(() => _sections = v.round()),
+            ),
+            SegmentedBar(ratio: 0.62, sections: _sections, color: accent),
+            const SizedBox(height: 6),
+            Text(
+              'Just visual — splits the bar so partial progress is easier '
+              'to read.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.4),
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -158,14 +207,17 @@ class _NewGoalSheetState extends State<_NewGoalSheet> {
               onPressed: !_valid
                   ? null
                   : () => Navigator.pop(
-                        context,
-                        NewGoalResult(
-                          name: _name.text.trim(),
-                          targetMinutes: int.parse(_minutes.text),
-                          period: _period,
-                          sections: _sections,
-                        ),
+                      context,
+                      NewGoalResult(
+                        name: _name.text.trim(),
+                        targetMinutes: _target,
+                        period: _period,
+                        // A count goal's bar reads best with one segment
+                        // per check-in.
+                        sections: _isCount ? _target.clamp(1, 10) : _sections,
+                        type: _type,
                       ),
+                    ),
               child: const Text(
                 'Create goal',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -178,16 +230,25 @@ class _NewGoalSheetState extends State<_NewGoalSheet> {
   }
 
   String _periodHint(GoalPeriod p) => switch (p) {
-        GoalPeriod.daily => 'Resets every midnight.',
-        GoalPeriod.weekly => 'Resets every Monday.',
-        GoalPeriod.biweekly => 'Resets every other Monday.',
-        GoalPeriod.monthly => 'Resets on the 1st of each month.',
-      };
+    GoalPeriod.daily => 'Resets every midnight.',
+    GoalPeriod.weekly => 'Resets every Monday.',
+    GoalPeriod.biweekly => 'Resets every other Monday.',
+    GoalPeriod.monthly => 'Resets on the 1st of each month.',
+  };
 
-  Widget _periodChip(GoalPeriod p) {
-    final selected = _period == p;
+  Widget _periodChip(GoalPeriod p) => _chip(
+    p.chipLabel,
+    selected: _period == p,
+    onTap: () => setState(() => _period = p),
+  );
+
+  Widget _chip(
+    String label, {
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
     return InkWell(
-      onTap: () => setState(() => _period = p),
+      onTap: onTap,
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
@@ -198,11 +259,13 @@ class _NewGoalSheetState extends State<_NewGoalSheet> {
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
-          p.chipLabel,
+          label,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: selected ? Colors.black : Colors.white.withValues(alpha: 0.6),
+            color: selected
+                ? Colors.black
+                : Colors.white.withValues(alpha: 0.6),
           ),
         ),
       ),
@@ -210,13 +273,13 @@ class _NewGoalSheetState extends State<_NewGoalSheet> {
   }
 
   InputDecoration _dec(String label, {String? hint}) => InputDecoration(
-        labelText: label,
-        hintText: hint,
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.05),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
-      );
+    labelText: label,
+    hintText: hint,
+    filled: true,
+    fillColor: Colors.white.withValues(alpha: 0.05),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide.none,
+    ),
+  );
 }
