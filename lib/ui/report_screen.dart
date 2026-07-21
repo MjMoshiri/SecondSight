@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/goal_repository.dart';
 import 'format.dart';
+import 'goal_detail_screen.dart';
 
 /// How many past windows a goal card shows at most.
 const _maxCells = 20;
@@ -28,14 +29,27 @@ class ReportScreen extends StatelessWidget {
               else
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
-                  sliver: SliverList.list(children: [
-                    _summary(reports),
-                    const SizedBox(height: 24),
-                    for (final report in reports) ...[
-                      _GoalReportCard(report: report),
-                      const SizedBox(height: 12),
+                  sliver: SliverList.list(
+                    children: [
+                      _summary(reports),
+                      const SizedBox(height: 24),
+                      for (final report in reports) ...[
+                        _GoalReportCard(
+                          report: report,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => GoalDetailScreen(
+                                repo: repo,
+                                goalId: report.goal.id,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
                     ],
-                  ]),
+                  ),
                 ),
             ],
           );
@@ -155,8 +169,9 @@ class ReportScreen extends StatelessWidget {
 
 class _GoalReportCard extends StatelessWidget {
   final GoalReport report;
+  final VoidCallback onTap;
 
-  const _GoalReportCard({required this.report});
+  const _GoalReportCard({required this.report, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -167,98 +182,101 @@ class _GoalReportCard extends StatelessWidget {
     final cells = report.history.length > _maxCells
         ? report.history.sublist(report.history.length - _maxCells)
         : report.history;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF161B24),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  report.goal.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-              ),
-              _chip(report.period.chipLabel),
-              const SizedBox(width: 10),
-              Text(
-                rate,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            height: 40,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: const Color(0xFF161B24),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                for (var i = 0; i < cells.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 3),
-                  Expanded(
-                    child: _cell(cells[i], color,
-                        isCurrent: i == cells.length - 1),
+                Expanded(
+                  child: Text(
+                    report.goal.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
                   ),
-                ],
+                ),
+                _chip(report.period.chipLabel),
+                const SizedBox(width: 10),
+                Text(
+                  rate,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
+                ),
               ],
             ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(fmtDay(cells.first.window.startDay), style: _axisStyle),
-              Text('now', style: _axisStyle),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _footNote(
-                report.currentStreak > 0
-                    ? 'streak ${report.currentStreak} · best '
-                        '${report.bestStreak}'
-                    : 'best streak ${report.bestStreak}',
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 40,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (var i = 0; i < cells.length; i++) ...[
+                    if (i > 0) const SizedBox(width: 3),
+                    Expanded(
+                      child: _cell(
+                        cells[i],
+                        color,
+                        isCurrent: i == cells.length - 1,
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              const Spacer(),
-              _footNote('${fmtCompact(report.totalMs)} total'),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(fmtDay(cells.first.window.startDay), style: _axisStyle),
+                Text('now', style: _axisStyle),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _footNote(
+                  report.currentStreak > 0
+                      ? 'streak ${report.currentStreak} · best '
+                            '${report.bestStreak}'
+                      : 'best streak ${report.bestStreak}',
+                ),
+                const Spacer(),
+                _footNote('${fmtCompact(report.totalMs)} total'),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  TextStyle get _axisStyle => TextStyle(
-        fontSize: 11,
-        color: Colors.white.withValues(alpha: 0.35),
-      );
+  TextStyle get _axisStyle =>
+      TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.35));
 
   Widget _cell(PeriodStat stat, Color color, {required bool isCurrent}) {
     final target = report.targetMs;
-    final ratio =
-        target == 0 ? 0.0 : (stat.loggedMs / target).clamp(0.0, 1.0);
+    final ratio = target == 0 ? 0.0 : (stat.loggedMs / target).clamp(0.0, 1.0);
     final cellColor = stat.met
         ? color
         : isCurrent
-            ? color.withValues(alpha: 0.45)
-            : Colors.white.withValues(alpha: 0.18);
+        ? color.withValues(alpha: 0.45)
+        : Colors.white.withValues(alpha: 0.18);
     return FractionallySizedBox(
       alignment: Alignment.bottomCenter,
       heightFactor: ratio < 0.08 ? 0.08 : ratio,
@@ -290,10 +308,10 @@ class _GoalReportCard extends StatelessWidget {
   }
 
   Widget _footNote(String text) => Text(
-        text,
-        style: TextStyle(
-          fontSize: 12.5,
-          color: Colors.white.withValues(alpha: 0.45),
-        ),
-      );
+    text,
+    style: TextStyle(
+      fontSize: 12.5,
+      color: Colors.white.withValues(alpha: 0.45),
+    ),
+  );
 }
