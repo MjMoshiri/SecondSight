@@ -395,6 +395,37 @@ class GoalRepository {
             .go();
       });
 
+  /// Manually logs a session, as if a timer had run for [durationMinutes]
+  /// on [day] ('yyyy-MM-dd').
+  Future<void> addManualLog({
+    required String goalId,
+    required String day,
+    required int durationMinutes,
+  }) async {
+    await db.into(db.timeLogs).insert(TimeLogsCompanion.insert(
+          id: _uuid.v4(),
+          goalId: goalId,
+          durationMs: durationMinutes * 60000,
+          day: day,
+          createdAtUtc: _nowUtcMs,
+        ));
+  }
+
+  Future<void> updateLog({
+    required String logId,
+    required String day,
+    required int durationMinutes,
+  }) =>
+      (db.update(db.timeLogs)..where((l) => l.id.equals(logId))).write(
+        TimeLogsCompanion(
+          day: Value(day),
+          durationMs: Value(durationMinutes * 60000),
+        ),
+      );
+
+  Future<void> deleteLog(String logId) =>
+      (db.delete(db.timeLogs)..where((l) => l.id.equals(logId))).go();
+
   Future<ActiveTimer?> _timerFor(String goalId) =>
       (db.select(db.activeTimers)..where((t) => t.goalId.equals(goalId)))
           .getSingleOrNull();

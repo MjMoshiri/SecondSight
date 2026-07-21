@@ -127,6 +127,41 @@ void main() {
     expect(report.last7DaysMs, 37 * 60000);
   });
 
+  test('addManualLog writes a log for the given day and duration', () async {
+    final id =
+        await repo.createGoal(name: 'X', targetMinutes: 10, period: GoalPeriod.daily);
+    await repo.addManualLog(goalId: id, day: '2026-07-19', durationMinutes: 25);
+    final logs = await db.select(db.timeLogs).get();
+    expect(logs.single.day, '2026-07-19');
+    expect(logs.single.durationMs, 25 * 60000);
+    expect((await progress()).loggedMsInWindow, 25 * 60000);
+  });
+
+  test('updateLog changes an existing log\'s day and duration', () async {
+    final id =
+        await repo.createGoal(name: 'X', targetMinutes: 10, period: GoalPeriod.daily);
+    await repo.addManualLog(goalId: id, day: '2026-07-19', durationMinutes: 10);
+    final logId = (await db.select(db.timeLogs).get()).single.id;
+
+    await repo.updateLog(logId: logId, day: '2026-07-18', durationMinutes: 40);
+    final logs = await db.select(db.timeLogs).get();
+    expect(logs.single.day, '2026-07-18');
+    expect(logs.single.durationMs, 40 * 60000);
+  });
+
+  test('deleteLog removes just that log', () async {
+    final id =
+        await repo.createGoal(name: 'X', targetMinutes: 10, period: GoalPeriod.daily);
+    await repo.addManualLog(goalId: id, day: '2026-07-19', durationMinutes: 10);
+    await repo.addManualLog(goalId: id, day: '2026-07-19', durationMinutes: 20);
+    final logs = await db.select(db.timeLogs).get();
+
+    await repo.deleteLog(logs.first.id);
+    final remaining = await db.select(db.timeLogs).get();
+    expect(remaining.length, 1);
+    expect(remaining.single.id, logs.last.id);
+  });
+
   test('deleteGoal removes goal, logs, and timer', () async {
     final id =
         await repo.createGoal(name: 'X', targetMinutes: 10, period: GoalPeriod.daily);

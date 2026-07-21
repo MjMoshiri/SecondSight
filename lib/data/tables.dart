@@ -27,8 +27,9 @@ class Goals extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// A finished chunk of tracked time. Written once when a timer stops;
-/// never updated. Progress is always the sum of logs in a period window.
+/// A finished chunk of tracked time — written when a timer stops, or
+/// entered/edited manually. Progress is always the sum of logs in a period
+/// window.
 @TableIndex(name: 'time_logs_goal_day', columns: {#goalId, #day})
 class TimeLogs extends Table {
   TextColumn get id => text()(); // uuid

@@ -6,6 +6,7 @@ import '../data/database.dart';
 import '../data/goal_repository.dart';
 import 'format.dart';
 import 'segmented_bar.dart';
+import 'session_sheet.dart';
 
 /// The tracking dashboard for one goal: current period, lifetime stats,
 /// past-period history, and recent sessions.
@@ -64,7 +65,17 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
                     const SizedBox(height: 12),
                     _historyChart(detail, color),
                     const SizedBox(height: 28),
-                    _sectionTitle('Recent sessions'),
+                    Row(
+                      children: [
+                        Expanded(child: _sectionTitle('Recent sessions')),
+                        IconButton(
+                          icon: const Icon(Icons.add_rounded),
+                          tooltip: 'Add session',
+                          onPressed: () =>
+                              _addSession(detail.progress.goal.id),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 4),
                     if (detail.recentLogs.isEmpty)
                       Padding(
@@ -350,33 +361,68 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
   }
 
   Widget _logRow(TimeLog log, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 9),
-      child: Row(
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.7),
-              shape: BoxShape.circle,
+    return InkWell(
+      onTap: () => _editSession(log),
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        child: Row(
+          children: [
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.7),
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            fmtDay(log.day),
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.75),
+            const SizedBox(width: 12),
+            Text(
+              fmtDay(log.day),
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.white.withValues(alpha: 0.75),
+              ),
             ),
-          ),
-          const Spacer(),
-          Text(
-            fmtCompact(log.durationMs),
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          ),
-        ],
+            const Spacer(),
+            Text(
+              fmtCompact(log.durationMs),
+              style:
+                  const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: Colors.white.withValues(alpha: 0.25),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  Future<void> _addSession(String goalId) async {
+    final result = await showSessionSheet(context);
+    if (result == null || result.delete) return;
+    await widget.repo.addManualLog(
+      goalId: goalId,
+      day: result.day,
+      durationMinutes: result.durationMinutes,
+    );
+  }
+
+  Future<void> _editSession(TimeLog log) async {
+    final result = await showSessionSheet(context, existing: log);
+    if (result == null) return;
+    if (result.delete) {
+      await widget.repo.deleteLog(log.id);
+    } else {
+      await widget.repo.updateLog(
+        logId: log.id,
+        day: result.day,
+        durationMinutes: result.durationMinutes,
+      );
+    }
   }
 }
