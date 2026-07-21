@@ -341,22 +341,18 @@ class _GoalDetailScreenState extends State<GoalDetailScreen> {
         : isCurrent
             ? color.withValues(alpha: 0.45)
             : Colors.white.withValues(alpha: 0.18);
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        AnimatedFractionallySizedBox(
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOutCubic,
-          heightFactor: ratio < 0.04 ? 0.04 : ratio,
-          child: Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: barColor,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
+    return AnimatedFractionallySizedBox(
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.bottomCenter,
+      heightFactor: ratio < 0.04 ? 0.04 : ratio,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: barColor,
+          borderRadius: BorderRadius.circular(4),
         ),
-      ],
+      ),
     );
   }
 
